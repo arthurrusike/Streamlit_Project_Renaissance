@@ -8,6 +8,7 @@ import plotly.graph_objects as go
 import matplotlib.pyplot as plt
 import streamlit as st
 from helper_functions import style_dataframe, load_profitbility_Summary_model,load_rates_standardisation, load_specific_xls_sheet
+from streamlit import session_state as ss
 
 from site_detailed_view_helper_functions import load_invoices_model, profitability_model
 
@@ -49,15 +50,31 @@ with st.spinner('Loading and Updating Report...🥱'):
             st.markdown(f'###### This is the Customer Rates Model from Box:APAC Rev...')
             st.divider()
 
+            st.title("Site Detailed View")
+            uploaded_invoicing_data = st.file_uploader('Upload Customer Rates File', type=['xlsx', 'xlsm', 'xlsb'])
+            # Main Dashboard
+            invoice_rates = load_invoices_model(uploaded_invoicing_data)
+            st.divider()
+
+            st.markdown("#### Dates Covered by Invoice File")
+            start_date = invoice_rates.formatted_date.dropna()
+            st.markdown(f'###### Report Start Date  : {start_date.min()}')
+            st.markdown(f'###### Report End Date  : {start_date.max()}')
+            st.divider()
+
+
     except Exception as e:
 
         st.subheader('To use with this WebApp 📊  - Upload below : \n '
                      '1. Profitability Summary File \n'
-                     '2. Customer Rates Summary File ')
+                     '2. Customer Rates Summary File \n'
+                     '3. Customer Invoicing Data')
+
+
 
 # Main Dashboard ##############################
 
-if uploaded_file and customer_rates_file:
+if uploaded_file and customer_rates_file and uploaded_invoicing_data:
     profitability_summary_file = load_profitbility_Summary_model(uploaded_file)
 
     # Create additional Column called CC : to be used for cross-referencing with Customer Rates Fil
@@ -435,14 +452,14 @@ if uploaded_file and customer_rates_file:
                     Score - is Performance in rank of Customer's KPI relative to it's Revenue contribution rank. \n
                     Score Card : Scoring bands with Respective Comments\n
                     
-                    |Band                      |    Definition                       |
-                    |:-------------------------|:------------------------------------|
-                    |+1.5 : High Risk          | Needs immediate review and action   |
-                    |1.50 : Needs Improvement  | Identify areas of Improvement       |
-                    |1.25 : Red Flag           | Future problem review now           |
-                    |1.00 : Satisfactory       | Satisfactory to have Customer       |
-                    |0.70 : Good               | Good to have Customer               |
-                    |0.50 : Excellent          | Excellent to have Customer          |
+                    |Band                  |    Definition                       |
+                    |:---------------------|:------------------------------------|
+                    |+1.5 : High Risk      | Needs immediate review and action   |
+                    |1.50 : Unsatisfactory | Identify areas of Improvement       |
+                    |1.25 : Red Flag       | Future problem review now           |
+                    |1.00 : Satisfactory   | Satisfactory to have Customer       |
+                    |0.70 : Good           | Good to have Customer               |
+                    |0.50 : Excellent      | Excellent to have Customer          |
                   
                 """)
 
@@ -543,7 +560,8 @@ if uploaded_file and customer_rates_file:
                 jitter=0.8,
                 pointpos=0,
                 name="Storage Rate",
-                marker={"size": 4},
+                line={"color": '#4D93D9'},
+                marker={"size": 5, "color": 'red'},
 
             ))
 
@@ -615,7 +633,8 @@ if uploaded_file and customer_rates_file:
                 jitter=0.8,
                 pointpos=0,
                 name="Handling Rates",
-                marker={"size": 4},
+                line={"color": '#4D93D9'},
+                marker={"size": 5, "color": 'red'},
             ))
 
             # Add annotations for each data point
@@ -696,7 +715,8 @@ if uploaded_file and customer_rates_file:
                     jitter=0.8,
                     pointpos=0,
                     name="Shrink Wrap Rates",
-                    marker={"size": 4},
+                    line={"color": '#4D93D9'},
+                    marker={"size": 5, "color": 'red'},
                 ))
 
                 # Add annotations for each data point
@@ -766,7 +786,8 @@ if uploaded_file and customer_rates_file:
                     jitter=0.8,
                     pointpos=0,
                     name="Carton Picking Rates",
-                    marker={"size": 4},
+                    line={"color": '#4D93D9'},
+                    marker={"size": 5, "color": 'red'},
                 ))
 
                 # Add annotations for each data point
@@ -817,9 +838,9 @@ if uploaded_file and customer_rates_file:
             try:
                 with st.sidebar:
                     st.title("Site Detailed View")
-                    uploaded_file = st.file_uploader('Upload Customer Rates File', type=['xlsx', 'xlsm', 'xlsb'])
+                    uploaded_file2 = st.file_uploader('Upload Customer Rates File', type=['xlsx', 'xlsm', 'xlsb'])
                     # Main Dashboard
-                    invoice_rates = load_invoices_model(uploaded_file)
+                    invoice_rates = load_invoices_model(uploaded_file2)
                     st.divider()
 
                     st.markdown("#### Dates Covered by Invoice File")
@@ -834,7 +855,7 @@ if uploaded_file and customer_rates_file:
 
         ###############################  Main Dashboard ##############################
 
-        if uploaded_file:
+        if uploaded_invoicing_data:
             cost_centres = invoice_rates[invoice_rates.Cost_Center.str.contains("S&H", na=False)]
             cost_centres = cost_centres.Cost_Center.unique()
             all_workday_Customer_names = invoice_rates.WorkdayCustomer_Name.unique()
@@ -1334,7 +1355,9 @@ if uploaded_file and customer_rates_file:
     with AboutTab:
         st.markdown(f'##### Arthur Rusike: *Report any Code breaks or when you see Red Error Message*'
                     )
-else:
-    st.subheader('To use with this WebApp 📊  - Upload below : \n '
-                 '1. Profitability Summary File \n'
-                 '2. Customer Rates Summary File ')
+# else:
+#     st.subheader('To use with this WebApp 📊  - Upload below : \n '
+#                  '1. Profitability Summary File \n'
+#                  '2. Customer Rates Summary File \n'
+#                  '3. Customer Invoicing Data'
+#                  )
