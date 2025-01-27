@@ -888,14 +888,14 @@ if uploaded_file and customer_rates_file:
                 st.dataframe(selected_customer_pivot_table)
 
                 # Convert DataFrame to Excel
-                output = io.BytesIO()
-                with pd.ExcelWriter(output) as writer:
+                output891 = io.BytesIO()
+                with pd.ExcelWriter(output891) as writer:
                     selected_customer_pivot.to_excel(writer)
 
                 # Create a download button
                 st.download_button(
                     label="Download Excel  ⤵️",
-                    data=output,
+                    data=output891,
                     file_name='invoiced_data.xlsx',
                     mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
                     key=210
@@ -952,14 +952,14 @@ if uploaded_file and customer_rates_file:
 
                 except Exception:
                     st.markdown('#### Data has Negative Values or is in a State that cannot be used with is Visualisation. Please review excel file')
-                    output1a = io.BytesIO()
-                    with pd.ExcelWriter(output1a) as writer:
+                    output955 = io.BytesIO()
+                    with pd.ExcelWriter(output955) as writer:
                         selected_customer_pivot_pie_chart.to_excel(writer, sheet_name='export_data', index=False)
 
                     # Create a download button
                     st.download_button(
                         label="👆 Download ⤵️",
-                        data=output1a,
+                        data=output955,
                         file_name='customer_revenue.xlsx',
                         mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
                         key=969,
@@ -1003,14 +1003,14 @@ if uploaded_file and customer_rates_file:
                 st.plotly_chart(fig2, use_container_width=True)
             except Exception:
                 st.markdown('#### Data has Negative Values or is in a State that cannot be used with is Visualisation. Please review excel file')
-                output1a = io.BytesIO()
-                with pd.ExcelWriter(output1a) as writer:
+                output1006 = io.BytesIO()
+                with pd.ExcelWriter(output1006) as writer:
                     select_CC_data_tab1.to_excel(writer, sheet_name='export_data', index=False)
 
                 # Create a download button
                 st.download_button(
                     label="👆 Download ⤵️",
-                    data=output1a,
+                    data=output1006,
                     file_name='data_download.xlsx',
                     mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
                     key=1017,
@@ -1090,14 +1090,14 @@ if uploaded_file and customer_rates_file:
 
             except Exception:
                 st.markdown('#### Data has Negative Values or is in a State that cannot be used with is Visualisation. Please review excel file')
-                output1a = io.BytesIO()
-                with pd.ExcelWriter(output1a) as writer:
+                output1093 = io.BytesIO()
+                with pd.ExcelWriter(output1093) as writer:
                     df_pStorage.to_excel(writer, sheet_name='export_data', index=False)
 
                 # Create a download button
                 st.download_button(
                     label="👆 Download ⤵️",
-                    data=output1a,
+                    data=output1093,
                     file_name='data_download.xlsx',
                     mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
                     key=1088,
@@ -1162,14 +1162,14 @@ if uploaded_file and customer_rates_file:
                     p2_Handling.plotly_chart(fig)
             except Exception :
                 st.markdown('#### Data has Negative Values or is in a State that cannot be used with is Visualisation. Please review excel file')
-                output1a = io.BytesIO()
-                with pd.ExcelWriter(output1a) as writer:
+                output1165 = io.BytesIO()
+                with pd.ExcelWriter(output1165) as writer:
                     df_pHandling.to_excel(writer, sheet_name='export_data', index=False)
 
                 # Create a download button
                 st.download_button(
                     label="👆 Download ⤵️",
-                    data=output1a,
+                    data=output1165,
                     file_name='data_download.xlsx',
                     mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
                     key=1160,
@@ -1230,14 +1230,14 @@ if uploaded_file and customer_rates_file:
                     p3_Wrapping.plotly_chart(fig)
             except Exception as e:
                 st.markdown('###### Data has Negative Values or is in a State that cannot be used with is Visualisation. Please review excel file')
-                output1a = io.BytesIO()
-                with pd.ExcelWriter(output1a) as writer:
+                output1233 = io.BytesIO()
+                with pd.ExcelWriter(output1233) as writer:
                     df_pWrapping.to_excel(writer, sheet_name='export_data', index=False)
 
                 # Create a download button
                 st.download_button(
                     label="👆 Download ⤵️",
-                    data=output1a,
+                    data=output1233,
                     file_name='data_download.xlsx',
                     mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
                     key=1228,
@@ -1302,28 +1302,28 @@ if uploaded_file and customer_rates_file:
                 download_data = selected_LineAmount[list(sortedListed)]
                 st.data_editor(download_data)
 
-                output2 = io.BytesIO()
-                with pd.ExcelWriter(output2) as writer:
+                output1305 = io.BytesIO()
+                with pd.ExcelWriter(output1305) as writer:
                     treemap_data.to_excel(writer, sheet_name='export_data', index=False)
 
                 # Create a download button
                 st.download_button(
                     label="Download file️ ⤵️",
-                    data=output2,
+                    data=output1305,
                     file_name='customer_revenue.xlsx',
                     mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
                     key=211,
                 )
             except Exception as e:
                 st.markdown('#### Data has Negative Values or is in a State that cannot be used with is Visualisation. Please review excel file')
-                output1a = io.BytesIO()
-                with pd.ExcelWriter(output1a) as writer:
+                output1319 = io.BytesIO()
+                with pd.ExcelWriter(output1319) as writer:
                     select_CC_data.to_excel(writer, sheet_name='export_data', index=False)
 
                 # Create a download button
                 st.download_button(
                     label="👆 Download ⤵️",
-                    data=output1a,
+                    data=output1319,
                     file_name='data_download.xlsx',
                     mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
                     key=1316,
