@@ -318,7 +318,7 @@ if uploaded_file and customer_rates_file:
 
         with st.expander("Top 10 Customers - Activity Rank", expanded=True):
 
-            rank1, rank2 = st.columns((2,1))
+            rank1, rank2 = st.columns((3,1))
             with rank1:
 
                 rank_display_data["Stock Turn Times"] = rank_display_data["Pallet"] / rank_display_data["TTP p.w."]
