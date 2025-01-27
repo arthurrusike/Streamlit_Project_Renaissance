@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+import matplotlib.pyplot as plt
 import streamlit as st
 from helper_functions import style_dataframe, load_profitbility_Summary_model,load_rates_standardisation, load_specific_xls_sheet
 
