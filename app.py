@@ -289,7 +289,7 @@ if uploaded_file and customer_rates_file:
             st.text("")
             s3.download_button(
                 label="👆 Download ⤵️",
-                data= display_data.to_excel(sheet_name='export_data', index=False).encode('utf-8'),
+                data= display_data.to_excel().encode('utf-8'),
                 file_name='customer_revenue.xlsx',
                 mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
                 key=110,
