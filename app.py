@@ -280,16 +280,16 @@ if uploaded_file and customer_rates_file:
         display_data = display_data.map(highlight_negative_values)
         display_data.background_gradient(subset=['EBITDA Margin\n%'], cmap="RdYlGn")
 
-        output1 = io.BytesIO()
-        with pd.ExcelWriter(output1) as writer:
-            display_data.to_excel(writer, sheet_name='export_data', index=False)
+        # output1 = io.BytesIO()
+        # with pd.ExcelWriter(output1) as writer:
+        #     display_data.to_excel(writer, sheet_name='export_data', index=False)
 
         # Create a download button
         with s3:
             st.text("")
             s3.download_button(
                 label="👆 Download ⤵️",
-                data=output1,
+                data= display_data.to_excel(sheet_name='export_data', index=False).encode('utf-8'),
                 file_name='customer_revenue.xlsx',
                 mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
                 key=110,
