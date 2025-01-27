@@ -1,7 +1,6 @@
 import io
 import random
 from io import BytesIO
-
 import numpy as np
 import pandas as pd
 import plotly.express as px
@@ -9,8 +8,6 @@ import plotly.graph_objects as go
 import streamlit as st
 
 from site_detailed_view_helper_functions import load_invoices_model, profitability_model
-
-
 
 st.set_page_config(page_title="Customer Rates and Invoicing Analysis", page_icon="📊", layout="wide",
                    initial_sidebar_state="expanded")

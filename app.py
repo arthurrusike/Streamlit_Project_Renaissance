@@ -6,9 +6,7 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
-import matplotlib.pyplot as plt
-from helper_functions import style_dataframe, load_profitbility_Summary_model, \
-    load_rates_standardisation, load_specific_xls_sheet
+from helper_functions import style_dataframe, load_profitbility_Summary_model,load_rates_standardisation, load_specific_xls_sheet
 
 from site_detailed_view_helper_functions import load_invoices_model, profitability_model
 
