@@ -284,7 +284,7 @@ if uploaded_file and customer_rates_file:
         with s3:
             output1 = io.BytesIO()
             with pd.ExcelWriter(output1) as writer:
-                display_data.to_excel(writer)
+                display_data.to_excel(writer,sheet_name='export_data', index=False)
 
             st.text("")
             s3.download_button(
