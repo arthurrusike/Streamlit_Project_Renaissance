@@ -1351,9 +1351,3 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
     with AboutTab:
         st.markdown(f'##### Arthur Rusike: *Report any Code breaks or when you see Red Error Message*'
                     )
-else:
-    st.subheader('To use with this WebApp 📊  - Upload below : \n '
-                 '1. Profitability Summary File \n'
-                 '2. Customer Rates Summary File \n'
-                 '3. Customer Invoicing Data'
-                 )
