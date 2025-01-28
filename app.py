@@ -256,7 +256,7 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
 
         st.subheader("Top 10 Customers")
 
-        s1, s2, s3, s4 = st.columns(4)
+        s1, s2, s3, s4, s5= st.columns(5)
 
         with s1:
             # s1_a, s1_b = st.columns(2)
@@ -325,13 +325,31 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
 
         with d4:
 
-            fig = px.pie(display_data_pie, values=display_data_pie[selected_graph],
-                         names=display_data_pie.Name,
-                         title=f'{selected_graph} View',
-                         height=300, width=200)
-            fig.update_layout(margin=dict(l=20, r=20, t=30, b=0), )
+            fig = px.bar(display_data_pie[selected_graph],
+                         x=selected_graph,
+                         y=display_data_pie.Name,
+                         # title=f'{selected_graph} View',
+                         height=len(display_data_pie)*50 ,
+                         orientation='h')
+
+            fig.update_layout(yaxis={'categoryorder':'total ascending'})
 
             d4.plotly_chart(fig, use_container_width=True)
+
+
+
+            #
+            #
+            # fig = px.pie(display_data_pie, values=display_data_pie[selected_graph],
+            #              names=display_data_pie.Name,
+            #              title=f'{selected_graph} View',
+            #              height=300, width=200)
+            # fig.update_layout(margin=dict(l=20, r=20, t=30, b=0), )
+            #
+            # d4.plotly_chart(fig, use_container_width=True)
+        # st.divider()
+        st.subheader("Top 10 Customers Score Card", divider='rainbow' )
+        st.divider()
 
         with st.expander("Top 10 Customers - Activity Rank", expanded=True):
 
@@ -1333,9 +1351,9 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
     with AboutTab:
         st.markdown(f'##### Arthur Rusike: *Report any Code breaks or when you see Red Error Message*'
                     )
-# else:
-#     st.subheader('To use with this WebApp 📊  - Upload below : \n '
-#                  '1. Profitability Summary File \n'
-#                  '2. Customer Rates Summary File \n'
-#                  '3. Customer Invoicing Data'
-#                  )
+else:
+    st.subheader('To use with this WebApp 📊  - Upload below : \n '
+                 '1. Profitability Summary File \n'
+                 '2. Customer Rates Summary File \n'
+                 '3. Customer Invoicing Data'
+                 )
