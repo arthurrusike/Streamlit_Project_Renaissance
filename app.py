@@ -7,14 +7,15 @@ import plotly.express as px
 import plotly.graph_objects as go
 import matplotlib.pyplot as plt
 import streamlit as st
-from helper_functions import style_dataframe, load_profitbility_Summary_model,load_rates_standardisation, load_specific_xls_sheet
+from helper_functions import style_dataframe, load_profitbility_Summary_model, load_rates_standardisation, \
+    load_specific_xls_sheet
 from streamlit import session_state as ss
+from plotly.subplots import make_subplots
 
 from site_detailed_view_helper_functions import load_invoices_model, profitability_model
 
 st.set_page_config(page_title="Project Renaissance Analysis", page_icon="📊", layout="wide",
                    initial_sidebar_state="expanded")
-
 
 
 def extract_cc(cost_centre):
@@ -70,11 +71,19 @@ with st.spinner('Loading and Updating Report...🥱'):
                      '2. Customer Rates Summary File \n'
                      '3. Customer Invoicing Data')
 
-
-
 # Main Dashboard ##############################
 
 if uploaded_file and customer_rates_file and uploaded_invoicing_data:
+
+    DetailsTab, SiteTab, ProfitabilityTab, AboutTab = st.tabs(["📊 Quick View", "🥇 Site Detailed View",
+                                                               "📈 Estimate Profitability",
+                                                               "ℹ️ About"])
+    def highlight_negative_values(value):
+        if type(value) != str:
+            if value < 0:
+                return f"color: red"
+
+
     profitability_summary_file = load_profitbility_Summary_model(uploaded_file)
 
     # Create additional Column called CC : to be used for cross-referencing with Customer Rates Fil
@@ -100,6 +109,17 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
     # Read individual Excel sheet separately = Customer Volumes current year and prior year. Use for comparison.
     dominic_report = load_specific_xls_sheet(customer_rates_file, "dominic_report", 0, "A:AM")
 
+    # Read individual Excel sheet separately = Customer Volumes current year and prior year. Use for comparison.
+    budget_data_2025 = load_specific_xls_sheet(customer_rates_file, "2025_Budget", 0, "A:AP")
+
+    budget_data_2025 = budget_data_2025[["Year", "Site", "Revenue", "Ebitda", "Economic OHP", "Labour to Tot. Rev",
+                                         "Direct Labor / Hour", "DL to Handling Rev", "Economic Utilization"]]
+
+    budget_data_2025["Rev Per Pallet"] = budget_data_2025["Revenue"] / budget_data_2025["Economic OHP"]
+    budget_data_2025["Ebitda Per Pallet"] = budget_data_2025["Ebitda"] / budget_data_2025["Economic OHP"]
+    budget_data_2025.dropna(inplace=True)
+    budget_comparison_years = budget_data_2025.Year.unique()
+
     # Customer Names for Selection in Select Box
     all_workday_customer_names = profitability_summary_file.Customer.unique()
 
@@ -109,17 +129,20 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
     # Site Names for Selection in Select Box
     site_list = list(profitability_summary_file.Site.unique())
 
-    space_holder_1, title_holder, cost_centres_selection, space_holder3 = st.columns(4)
 
-    title_holder.subheader("Project Renaissance", divider="blue")
-    selected_site = cost_centres_selection.multiselect("Site :", site_list, site_list[1])
 
-    DetailsTab, SiteTab, ProfitabilityTab, AboutTab = st.tabs(["📊 Quick View", "🥇 Site Detailed View",
-                                                               "📈 Estimate Profitability",
-                                                               "ℹ️ About"])
+
     #  Details Tab ###############################
 
     with DetailsTab:
+        space_holder_1, title_holder, cost_centres_selection, space_holder3 = st.columns(4)
+
+        title_holder.subheader("Project Renaissance", divider="blue")
+        selected_site = cost_centres_selection.multiselect("Site :", site_list, site_list[:7])
+
+        st.text("")
+        st.text("")
+        st.text("")
 
         select_Site_data = profitability_summary_file[profitability_summary_file.Site.isin(selected_site)]
 
@@ -127,16 +150,155 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
             profitability_2023.Site.isin(selected_site)]
         select_Site_data_2023_pallets = customer_pallets[customer_pallets.Site.isin(selected_site)]
 
-        kpi1, kpi2, kpi3, kpi4, = st.columns(4)
 
-        with kpi1:
+        section1, section2, section3 = st.columns((len(selected_site)*0.20, len(selected_site), len(selected_site)*.5))
+
+
+        with section1:
+            selected_years = []
+            t1, t2,t3,t4 = st.columns((2,1,1,1))
+
+            with t1:
+                st.text("")
+                st.text("")
+                t1.markdown("##### Years")
+                _2025 = t1.checkbox('2025', True)
+                _2024 = t1.checkbox('2024')
+                _2023 = t1.checkbox('2023')
+
+            if _2025:
+                selected_years.append(2025)
+
+            if _2024:
+                selected_years.append(2024)
+
+            if _2023:
+                selected_years.append(2023)
+
+            budget_data_2025_bench_mark = budget_data_2025
+            budget_data_2025 = budget_data_2025[budget_data_2025.Year.isin(selected_years)]
+            budget_data_2025 = budget_data_2025[budget_data_2025.Site.isin(selected_site)]
+
+            budget_data_2025 = budget_data_2025.groupby(by=["Site", "Year"]).sum().reset_index()
+            budget_data_2025 = budget_data_2025.sort_values(by=["Site", "Year"], ascending=[False, False])
+
+            budget_data_2025_pivot = budget_data_2025
+            budget_data_2025.insert(0, "Description",
+                                    budget_data_2025_pivot["Site"] + " : " + budget_data_2025_pivot["Year"].astype(str))
+            budget_data_2025_pivot = budget_data_2025_pivot.set_index("Description")
+
+            def format_for_percentage(value):
+                return "{:.2%}".format(value)
+
+            def format_for_currency(value):
+                return "${0:,.0f}".format(value)
+
+            def format_for_float(value):
+                return "${0:,.2f}".format(value)
+
+            def format_for_int(value):
+                return "{0:,.0f}".format(value)
+
+            budget_data_2025_pivot["Revenue"] = budget_data_2025_pivot["Revenue"].apply(format_for_currency)
+            budget_data_2025_pivot["Ebitda"] = budget_data_2025_pivot["Ebitda"].apply(format_for_currency)
+            budget_data_2025_pivot["Rev Per Pallet"] = budget_data_2025_pivot["Rev Per Pallet"].apply(format_for_float)
+            budget_data_2025_pivot["Ebitda Per Pallet"] = budget_data_2025_pivot["Ebitda Per Pallet"].apply(format_for_float)
+            budget_data_2025_pivot["Economic Utilization"] = budget_data_2025_pivot["Economic Utilization"].apply(format_for_percentage)
+            budget_data_2025_pivot["Economic OHP"] = budget_data_2025_pivot["Economic OHP"].apply(format_for_int)
+            budget_data_2025_pivot["Labour to Tot. Rev"] = budget_data_2025_pivot["Labour to Tot. Rev"].apply(format_for_percentage)
+            budget_data_2025_pivot["DL to Handling Rev"] = budget_data_2025_pivot["DL to Handling Rev"].apply(format_for_percentage)
+            budget_data_2025_pivot["Direct Labor / Hour"] = budget_data_2025_pivot["Direct Labor / Hour"].apply(format_for_float)
+
+            budget_data_2025_pivot = budget_data_2025_pivot.T
+
+            budget_data_2025_pivot = budget_data_2025_pivot[2:]
+
+            styles = [
+                {
+                    'selector': ' tr:hover',
+                    'props': [
+                        ('border', '1px solid #4CAF50'),
+                        ('background-color', 'wheat'),
+
+                    ]
+                },
+                {
+                    'selector': ' tr',
+                    'props': [
+                        ('text-align', 'right'),
+                        ('font-size', '12px'),
+                        ('font-family', 'sans-serif, Arial'),
+
+                    ]
+                }
+
+            ]
+
+            for column in budget_data_2025_pivot.columns:
+                styles.append({
+
+                    'selector': f'th.col{budget_data_2025_pivot.columns.get_loc(column)}',
+                    'props': [
+                        ('background-color', '#305496'),
+                        ('width', 'auto'),
+                        ('color', 'white'),
+                        ('font-family', 'sans-serif, Arial'),
+                        ('font-size', '12px'),
+                        ('text-align', 'center'),
+                        ('border', '2px solid white')
+                    ],
+
+                }
+                )
+
+            budget_data_2025_pivot = budget_data_2025_pivot.style.set_table_styles(styles)
+
+            # budget_data_2025_pivot = budget_data_2025_pivot.set_table_styles({
+            #     'Description': [{'selector': 'th', 'props': [('color', 'red')]}],
+            #
+            # })
+        section2.markdown("##### Site Financial Summary")
+        section2.write(budget_data_2025_pivot.to_html(), unsafe_allow_html=True)
+
+            # budget_data_2025 = budget_data_2025.style.hide(axis="index")
+            #
+            # budget_data_2025 = budget_data_2025.hide(["Economic OHP", 'Direct Labor / Hour', 'DL to Handling Rev',
+            #                                           'Labour to Tot. Rev'], axis='columns')
+            #
+            # budget_data_2025 = budget_data_2025.format({
+            #     "Year": '{0:,.0f}',
+            #     'Revenue': "${0:,.0f}",
+            #     'Ebitda': "${0:,.0f}",
+            #     'Ebitda Per Pallet': "${0:,.2f}",
+            #     'Rev Per Pallet': "${0:,.2f}",
+            #     'Economic Utilization': "{0:,.2%}",
+            #     'Direct Labor / Hour': "${0:,.2f}",
+            #     'DL to Handling Rev': "{0:,.2%}",
+            #     'Labour to Tot. Rev': "{0:,.2%}",
+            # })
+            #
+            # budget_data_2025 = budget_data_2025.map(highlight_negative_values)
+            #
+            # budget_data_2025 = style_dataframe(budget_data_2025)
+            #
+            # section2.write(budget_data_2025.to_html(), unsafe_allow_html=True)
+
+        with section3:
+            st.text("")
+            st.text("")
+            st.text("")
+
+
+            kpi1, kpi2, = st.columns(2)
+
+            # with kpi1:
             revenue_2024 = select_Site_data[" Revenue"].sum() / 1000
             revenue_2023 = select_Site_data_2023_profitability[" Revenue"].sum() / 1000
             delta = f"{((revenue_2024 / revenue_2023) - 1):,.1%}"
 
             kpi1.metric(label=f"FY24: Revenue - 000s", value=f"{revenue_2024:,.0f}", delta=f"{delta} vs LY ")
 
-        with kpi2:
+            # with kpi2:
             ebitda_2024 = select_Site_data["EBITDA $"].sum() / 1000
             ebitda_2023 = select_Site_data_2023_profitability["EBITDA $"].sum() / 1000
             delta = f"{((ebitda_2024 / ebitda_2023) - 1):,.1%}"
@@ -145,8 +307,10 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
 
             kpi2.metric(label=f"FY24: EBITDA - 000s", value=f"{ebitda_2024:,.0f}",
                         delta=f"{delta} | FY24 → {ebitda_margin}   ")
+            st.text("")
+            st.text("")
 
-        with kpi3:
+            kpi3, kpi4, = st.columns(2)
 
             dominic_report_2024 = dominic_report[(dominic_report.Year == 2024) & (dominic_report.Month == "December")]
             dominic_report_2024["Site"] = dominic_report_2024["Cost Centers"].apply(extract_site)
@@ -169,7 +333,7 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
 
             kpi3.metric(label=f"Economic Occupancy", value=f"{dec_2024_occupancy:,.1%}", delta=f"{delta} ")
 
-        with kpi4:
+            # with kpi4:
             volume_guarantee_2024 = select_Site_data_2023_pallets["VG Pallets - Dec-2024"].sum()
             volume_guarantee_2023 = select_Site_data_2023_pallets["VG Pallets - Dec-2023"].sum()
 
@@ -178,13 +342,6 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
             kpi4.metric(label=f"Volume Guarantee", value=f"{volume_guarantee_2024:,.0f}", delta=f"{delta} ")
 
         st.divider()
-
-
-        def highlight_negative_values(value):
-            if type(value) != str:
-                if value < 0:
-                    return f"color: red"
-
 
         fin1, fin2 = st.columns(2)
 
@@ -215,7 +372,7 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
 
         with fin1:
             fin1.markdown("##### Financial Summary")
-            fin1.write(key_metrics_data_pivot.to_html(), unsafe_allow_html=True )
+            fin1.write(key_metrics_data_pivot.to_html(), unsafe_allow_html=True)
 
         key_metrics_data = key_metrics_data.groupby("CC").sum()
 
@@ -225,7 +382,7 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
 
         key_metrics_data["Rev Per Plt"] = key_metrics_data[" Revenue"] / key_metrics_data["Pallet"]
         key_metrics_data["EBITDA Per Plt"] = key_metrics_data["EBITDA $"] / key_metrics_data["Pallet"]
-        key_metrics_data["Stock Turn Times"] = key_metrics_data["Pallet"] / key_metrics_data["TTP p.w."]
+        key_metrics_data["Stock Turn Times"] = (key_metrics_data["Pallet"] * 52) / key_metrics_data["TTP p.w."]
         key_metrics_data["DL %"] = DL_Handling / Service_Revenue
         key_metrics_data["LTR %"] = Ttl_Labour / key_metrics_data[" Revenue"]
 
@@ -248,15 +405,17 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
 
         with fin2:
             fin2.markdown("##### KPI Summary")
-            fin2.write(kpi_key_metrics_data_pivot.to_html(), unsafe_allow_html=True  )
+            fin2.write(kpi_key_metrics_data_pivot.to_html(), unsafe_allow_html=True)
 
         st.divider()
 
         # TOP 10 Customers ##################################################
 
-        st.subheader("Top 10 Customers")
+        st.subheader("Top 10 Customers", divider='rainbow')
 
-        s1, s2, s3, s4, s5= st.columns(5)
+        st.text("")
+
+        s1, s2, s3, s4, s5 = st.columns(5)
 
         with s1:
             # s1_a, s1_b = st.columns(2)
@@ -273,15 +432,16 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
         select_CC_data["Rank"] = select_CC_data[" Revenue"].rank(method='max')
         treemap_data = select_CC_data.filter(
             ['Name', " Revenue", 'EBITDA $', 'EBITDA Margin\n%', 'EBITDA per Pallet', 'Revenue per Pallet',
-             'Pallet', 'TTP p.w.', 'Rank'])
+             'Pallet', 'TTP p.w.','Rank' ,'Turn', "DLH% \n(DL / Service Rev)", "LTR % (Labour to Rev %)"])
 
         display_data = treemap_data
         size = len(display_data)
         display_data = display_data.query(f"Rank > {size - 10} ")
         display_data_pie = display_data
         rank_display_data = display_data
+
         display_data = display_data.style.hide(axis="index")
-        display_data = display_data.hide(["Rank"], axis="columns")
+        display_data = display_data.hide(['Rank'], axis="columns")
 
         display_data = style_dataframe(display_data)
 
@@ -292,7 +452,9 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
             'Revenue per Pallet': "${0:,.2f}",
             'EBITDA per Pallet': "${0:,.2f}",
             'Pallet': "{0:,.0f}",
-            'TTP p.w.': '{0:,.0f}'
+            'TTP p.w.': '{0:,.0f}',
+            "DLH% \n(DL / Service Rev)": "{0:,.2%}",
+            "LTR % (Labour to Rev %)": "{0:,.2%}"
         })
 
         display_data = display_data.map(highlight_negative_values)
@@ -302,58 +464,252 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
         with s3:
             output1 = io.BytesIO()
             with pd.ExcelWriter(output1) as writer:
-                display_data.to_excel(writer,sheet_name='export_data', index=False)
+                display_data.to_excel(writer, sheet_name='export_data', index=False)
 
             st.text("")
             s3.download_button(
                 label="👆 Download ⤵️",
-                data= output1,
+                data=output1,
                 file_name='customer_revenue.xlsx',
                 mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
                 key=295,
             )
 
-        with s4:
-            selected_graph = s4.selectbox("Display :", [" Revenue", 'EBITDA $', 'EBITDA Margin\n%', 'EBITDA per Pallet',
-                                                        'Revenue per Pallet',
-                                                        'Pallet', 'TTP p.w.'], index=0)
+        st.write(display_data.to_html(), unsafe_allow_html=True, use_container_width=True)
 
-        d1, d4 = st.columns((2, 1))
+        # selected_graph = st.selectbox("Display :", [" Revenue", 'EBITDA $', 'EBITDA Margin\n%', 'EBITDA per Pallet',
+        #                                                 'Revenue per Pallet',
+        #                                                 'Pallet', 'TTP p.w.'], index=0)
+        #
 
-        with d1:
-            d1.write(display_data.to_html(),unsafe_allow_html=True, use_container_width=True )
+        # fig = px.bar(display_data_pie[selected_graph],
+        #              x=selected_graph,
+        #              y=display_data_pie.Name,
+        #              # title=f'{selected_graph} View',
+        #              height=len(display_data_pie) * 50,
+        #              orientation='h')
+        #
+        # fig.update_layout(yaxis={'categoryorder': 'total ascending'})
+        #
+        # st.plotly_chart(fig, use_container_width=True)
 
-        with d4:
+        st.text("")
+        st.text("")
+        st.text("")
 
-            fig = px.bar(display_data_pie[selected_graph],
-                         x=selected_graph,
-                         y=display_data_pie.Name,
-                         # title=f'{selected_graph} View',
-                         height=len(display_data_pie)*50 ,
-                         orientation='h')
-
-            fig.update_layout(yaxis={'categoryorder':'total ascending'})
-
-            d4.plotly_chart(fig, use_container_width=True)
+        with st.expander("Select Customer to Benchmark", expanded=True):
+            customer_list = rank_display_data.Name.unique()
+            st.subheader("Customer KPIs vs Site")
+            _bench1, _bench2,_bench3, = st.columns(3)
+            selected_customer = _bench2.selectbox("Select Customer", customer_list,
+                                             index=0, placeholder="Customer to Benchmark")
 
 
+            rank_display_data_benchmark = rank_display_data.loc[rank_display_data["Name"] == selected_customer]
 
-            #
-            #
-            # fig = px.pie(display_data_pie, values=display_data_pie[selected_graph],
-            #              names=display_data_pie.Name,
-            #              title=f'{selected_graph} View',
-            #              height=300, width=200)
-            # fig.update_layout(margin=dict(l=20, r=20, t=30, b=0), )
-            #
-            # d4.plotly_chart(fig, use_container_width=True)
+            site_benchmark = selected_cost_centre.split(" - ")[1].strip().title()
+
+            budget_data_2025_bench_mark = budget_data_2025_bench_mark.loc[budget_data_2025_bench_mark["Site"] == site_benchmark]
+            budget_data_2025_bench_mark = budget_data_2025_bench_mark.loc[budget_data_2025_bench_mark["Year"] == 2024]
+
+            _a, b1, b2, b3, _b = st.columns((1, 3, 3,3, 1))
+
+            with b1:
+                rank_display_data_benchmark["Site Rev Per Pallet"] = budget_data_2025_bench_mark[
+                    "Rev Per Pallet"].mean()
+
+                df = rank_display_data_benchmark[["Revenue per Pallet", "Site Rev Per Pallet"]]
+                df = df.T
+                fig = make_subplots(rows=2, cols=2, shared_yaxes=False, column_widths=[100, 100],
+                                    row_heights=[250, 250],
+                                    horizontal_spacing=1, vertical_spacing=0, shared_xaxes=True
+                                    )
+
+                fig.add_trace(
+                    go.Bar(x=df.loc["Revenue per Pallet"], y=[f'{selected_customer}'], name="Rev Per Pallet",
+                           orientation='h',
+                           marker=dict(cornerradius=30), showlegend=False
+                           ), 1, 1
+                )
+
+                fig.add_trace(
+                    go.Bar(x=df.loc["Site Rev Per Pallet"], y=[f'{site_benchmark}'], name="Silver",
+                           orientation='h',
+                           marker=dict(cornerradius=30), showlegend=False
+                           ), 2, 1,
+                )
+
+                fig.update_layout(height=250, width=600, title_text="Revenue Per Pallet vs Site")
+
+                b1.plotly_chart(fig, use_container_width=True)
+
+            with b2:
+                rank_display_data_benchmark["Site Ebitda Per Pallet"] = budget_data_2025_bench_mark[
+                    "Ebitda Per Pallet"].mean()
+
+                df = rank_display_data_benchmark[["Revenue per Pallet", "Site Ebitda Per Pallet"]]
+                df = df.T
+                fig = make_subplots(rows=2, cols=2, shared_yaxes=False, column_widths=[100, 100],
+                                    row_heights=[250, 250],
+                                    horizontal_spacing=1, vertical_spacing=0, shared_xaxes=True
+                                    )
+
+                fig.add_trace(
+                    go.Bar(x=df.loc["Revenue per Pallet"], y=[f'{selected_customer}'], name="Rev Per Pallet",
+                           orientation='h',
+                           marker=dict(cornerradius=30), showlegend=False
+                           ), 1, 1
+                )
+
+                fig.add_trace(
+                    go.Bar(x=df.loc["Site Ebitda Per Pallet"], y=[f'{site_benchmark}'], name="Silver",
+                           orientation='h',
+                           marker=dict(cornerradius=30), showlegend=False
+                           ), 2, 1,
+                )
+
+                fig.update_layout(height=250, width=600, title_text="EBITDA Per Pallet vs Site")
+
+                b2.plotly_chart(fig, use_container_width=True, key=455)
+
+
+            with b3:
+                # rank_display_data_benchmark["Site Pallet Turns"] = budget_data_2025_bench_mark[
+                #     "Stock Pallet Turn"].mean()
+
+                rank_display_data_benchmark["Site Pallet Turns"] = 10
+
+                df = rank_display_data_benchmark[["Turn", "Site Pallet Turns"]]
+                df = df.T
+                fig = make_subplots(rows=2, cols=2, shared_yaxes=False, column_widths=[100, 100],
+                                    row_heights=[250, 250],
+                                    horizontal_spacing=1, vertical_spacing=0, shared_xaxes=True
+                                    )
+
+                fig.add_trace(
+                    go.Bar(x=df.loc["Turn"], y=[f'{selected_customer}'], name="Turns",
+                           orientation='h',
+                           marker=dict(cornerradius=30), showlegend=False
+                           ), 1, 1
+                )
+
+                fig.add_trace(
+                    go.Bar(x=df.loc["Site Pallet Turns"], y=[f'{site_benchmark}'], name="Turns",
+                           orientation='h',
+                           marker=dict(cornerradius=30), showlegend=False
+                           ), 2, 1,
+                )
+
+                fig.update_layout(height=250, width=600, title_text="Stock Turns vs Site")
+
+                b3.plotly_chart(fig, use_container_width=True, key=593)
+
+            _c, c1, c2, _d = st.columns((1, 3, 3, 1))
+
+            with c1:
+                rank_display_data_benchmark["Site DL Per Pallet"] = budget_data_2025_bench_mark[
+                    "DL to Handling Rev"].mean()
+
+                df = rank_display_data_benchmark[["DLH% \n(DL / Service Rev)", "Site DL Per Pallet"]]
+                df = df.T
+                fig = make_subplots(rows=2, cols=2, shared_yaxes=False, column_widths=[100, 100],
+                                    row_heights=[250, 250],
+                                    horizontal_spacing=1, vertical_spacing=0, shared_xaxes=True
+                                    )
+
+                fig.add_trace(
+                    go.Bar(x=df.loc["DLH% \n(DL / Service Rev)"], y=[f'{selected_customer}'], name="DL Ratio",
+                           orientation='h',
+                           marker=dict(cornerradius=30), showlegend=False
+                           ), 1, 1
+                )
+
+                fig.add_trace(
+                    go.Bar(x=df.loc["Site DL Per Pallet"], y=[f'{site_benchmark}'], name="DL Ratio", orientation='h',
+                           marker=dict(cornerradius=30), showlegend=False
+                           ), 2, 1,
+                )
+
+                fig.update_layout(height=250, width=600, title_text="Customer DL Ratio vs Site")
+
+                b1.plotly_chart(fig, use_container_width=True, key=486)
+
+            with c2:
+                rank_display_data_benchmark["Site LTR"] = budget_data_2025_bench_mark["Labour to Tot. Rev"].mean()
+
+                df = rank_display_data_benchmark[["LTR % (Labour to Rev %)", "Site LTR"]]
+                df = df.T
+                fig = make_subplots(rows=2, cols=2, shared_yaxes=False, column_widths=[100, 100],
+                                    row_heights=[250, 250],
+                                    horizontal_spacing=1, vertical_spacing=0, shared_xaxes=True
+                                    )
+
+                fig.add_trace(
+                    go.Bar(x=df.loc["LTR % (Labour to Rev %)"], y=[f'{selected_customer}'], name="LTR", orientation='h',
+                           marker=dict(cornerradius=30), showlegend=False
+                           ), 1, 1
+                )
+
+                fig.add_trace(
+                    go.Bar(x=df.loc["Site LTR"], y=[f'{site_benchmark}'], name="LTR", orientation='h',
+                           marker=dict(cornerradius=30), showlegend=False
+                           ), 2, 1,
+                )
+
+                fig.update_layout(height=250, width=600, title_text="Customer LTR vs Site")
+
+                b2.plotly_chart(fig, use_container_width=True, key=512)
+
+        st.subheader("Top 10 Customers Score Card", divider='rainbow')
+
+        with st.expander("Score Card | Customer Grading ", expanded=True):
+            def1,wt1,def2 = st.columns(3)
+
+            with wt1:
+                revenue_per_pallet_weighting =  st.number_input("Rev Per Pallet Weighting",value=25)
+                ebitda_pallet_weighting = st.number_input("Ebitda Per Pallet Weighting",value=25)
+                direct_labour_ratio_weighting = st.number_input("Direct Labour Ratio Weighting",value=20)
+                stock_turn_weighting = st.number_input("Stock Turn Weighting",value=15)
+                volumes_weighting = st.number_input("Volumes Weighting", value=15)
+
+            def1.markdown(f"""
+                    __Score Card Definitions__ \n
+                    Score - assign a Performance metric based on Customer's KPIs relative to it's Contribution at site. \n
+                    
+                    1. Identified KPIs and Their Weightings
+                    First, identify the key performance indicators (KPIs) you want to use and assign a weight to each based on its importance. For example:
+                    -	Revenue Per Pallet:         {revenue_per_pallet_weighting}%
+                    -	EBITDA Per Pallet:          {ebitda_pallet_weighting}%
+                    -	Direct Labour Ratio:        {direct_labour_ratio_weighting}%
+                    -	Stock Turns:                {stock_turn_weighting}%
+                    -	Volumes:                    {volumes_weighting}%
+                    
+                    2. Normalize the KPIs - (Scaling) 
+                    3. Calculate the Weighted Score
+                    
+                """)
+
+            def2.markdown("""
+                    __Score Card Bands__ \n
+                    
+                    
+                    |Band                  |    Call to Action                       |
+                    |:---------------------|:------------------------------------|
+                    |+1.5 : High Risk      | Needs immediate review and action   |
+                    |1.50 : Unsatisfactory | Identify areas of Improvement       |
+                    |1.25 : Red Flag       | Future problem review now           |
+                    |1.00 : Satisfactory   | Satisfactory to have Customer       |
+                    |0.70 : Good           | Good to have Customer               |
+                    |0.50 : Excellent      | Excellent to have Customer          |
+                    
+                    
+                """)
+
         # st.divider()
-        st.subheader("Top 10 Customers Score Card", divider='rainbow' )
-        st.divider()
 
         with st.expander("Top 10 Customers - Activity Rank", expanded=True):
 
-            rank1, rank2 = st.columns((3,1))
+            rank1, rank2 = st.columns((3, 0.1))
             with rank1:
 
                 rank_display_data["Stock Turn Times"] = rank_display_data["Pallet"] / rank_display_data["TTP p.w."]
@@ -373,14 +729,15 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
                                                + rank_display_data["Pallets"] + rank_display_data["TTP"]) / 7) / \
                                              rank_display_data["Rev Rank"]
 
+
                 def scoring_customer(score1):
                     if score1 < 1000:
                         return 5
                     return rank_display_data["Score"]
 
 
-
-                rank_display_data["Score"] = [ 5 if y < 1000 else x for x,y in zip(rank_display_data["Score"],rank_display_data["EBITDA $"])]
+                rank_display_data["Score"] = [5 if y < 1000 else x for x, y in
+                                              zip(rank_display_data["Score"], rank_display_data["EBITDA $"])]
 
 
                 def assign_score_card(score):
@@ -419,13 +776,16 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
 
                 rank_display_data["Comment"] = rank_display_data["Score Card"].apply(add_comment)
 
-                columns_to_hide = [" Revenue", 'EBITDA $', 'EBITDA Margin\n%', 'EBITDA per Pallet', 'Revenue per Pallet',
+                columns_to_hide = [" Revenue", 'EBITDA $', 'EBITDA Margin\n%', 'EBITDA per Pallet',
+                                   'Revenue per Pallet',
                                    'Pallet', 'TTP p.w.', 'Stock Turn Times']
 
                 rank_display_data = rank_display_data.style.hide(axis="index")
                 rank_display_data = rank_display_data.hide([" Revenue", 'EBITDA $', 'EBITDA Margin\n%',
-                                                            'EBITDA per Pallet', 'Revenue per Pallet', 'Pallet', 'TTP p.w.',
-                                                            'Stock Turn Times', 'Rank'], axis="columns")
+                                                            'EBITDA per Pallet', 'Revenue per Pallet', 'Pallet',
+                                                            'TTP p.w.',
+                                                            'Stock Turn Times', 'Rank', "DLH% \n(DL / Service Rev)",
+                                                            "LTR % (Labour to Rev %)"], axis="columns")
 
                 rank_display_data = rank_display_data.format({
                     "Rev Rank": '{0:,.0f}',
@@ -446,7 +806,7 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
                 rank_display_data = style_dataframe(rank_display_data)
                 rank_display_data = rank_display_data.map(highlight_negative_values)
 
-                rank1.write(rank_display_data.to_html(), unsafe_allow_html=True, use_container_width=True )
+                rank1.write(rank_display_data.to_html(), unsafe_allow_html=True, use_container_width=True)
 
                 output1a = io.BytesIO()
                 with pd.ExcelWriter(output1a) as writer:
@@ -464,22 +824,7 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
                     key=367,
                 )
 
-            with rank2:
-                rank2.markdown(f"""
-                    __Score Card Definitions__ \n
-                    Score - is Performance in rank of Customer's KPI relative to it's Revenue contribution rank. \n
-                    Score Card : Scoring bands with Respective Comments\n
-                    
-                    |Band                  |    Definition                       |
-                    |:---------------------|:------------------------------------|
-                    |+1.5 : High Risk      | Needs immediate review and action   |
-                    |1.50 : Unsatisfactory | Identify areas of Improvement       |
-                    |1.25 : Red Flag       | Future problem review now           |
-                    |1.00 : Satisfactory   | Satisfactory to have Customer       |
-                    |0.70 : Good           | Good to have Customer               |
-                    |0.50 : Excellent      | Excellent to have Customer          |
-                  
-                """)
+
 
         st.divider()
 
@@ -599,7 +944,8 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
                                   "color": 'black'})
 
                         fig.update_layout(
-                            title=dict(text=f'{selected_site_rate_cards} : Customers ({df_pStorage_customers_count}) : Storage Rates'),
+                            title=dict(
+                                text=f'{selected_site_rate_cards} : Customers ({df_pStorage_customers_count}) : Storage Rates'),
                             margin=dict(l=0, r=10, b=10, t=30),
                         )
                 else:
@@ -615,7 +961,8 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
                               "color": 'black'})
 
                     fig.update_layout(
-                        title=dict(text=f'{selected_site_rate_cards} : Customers ({df_pStorage_customers_count}) : Storage Rates'),
+                        title=dict(
+                            text=f'{selected_site_rate_cards} : Customers ({df_pStorage_customers_count}) : Storage Rates'),
                         margin=dict(l=0, r=10, b=10, t=30),
                     )
 
@@ -672,7 +1019,8 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
                         )
 
                         fig.update_layout(
-                            title=dict(text=f'{selected_site_rate_cards} : Customers ({df_pHandling_customers_count}): Handling Rates'),
+                            title=dict(
+                                text=f'{selected_site_rate_cards} : Customers ({df_pHandling_customers_count}): Handling Rates'),
                             margin=dict(l=0, r=10, b=10, t=30)
                         )
                 else:
@@ -688,7 +1036,8 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
                               "color": 'black'})
 
                     fig.update_layout(
-                        title=dict(text=f'{selected_site_rate_cards} : Customers ({df_pHandling_customers_count}): Handling Rates'),
+                        title=dict(
+                            text=f'{selected_site_rate_cards} : Customers ({df_pHandling_customers_count}): Handling Rates'),
                         margin=dict(l=0, r=10, b=10, t=30)
                     )
 
@@ -754,7 +1103,8 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
                             )
 
                             fig.update_layout(
-                                title=dict(text=f'{selected_site_rate_cards} : Customers ({df_pWrapping_customers_count}) : Shrink Wrapping Rates'),
+                                title=dict(
+                                    text=f'{selected_site_rate_cards} : Customers ({df_pWrapping_customers_count}) : Shrink Wrapping Rates'),
                                 margin=dict(l=0, r=10, b=10, t=20))
                     else:
                         seperator = negative_separator if seperator == positive_separator else positive_separator
@@ -769,7 +1119,8 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
                                   "color": 'black'})
 
                         fig.update_layout(
-                            title=dict(text=f'{selected_site_rate_cards} : Customers ({df_pWrapping_customers_count}) : Shrink Wrapping Rates'),
+                            title=dict(
+                                text=f'{selected_site_rate_cards} : Customers ({df_pWrapping_customers_count}) : Shrink Wrapping Rates'),
                             margin=dict(l=0, r=10, b=10, t=20))
 
                 p3_Wrapping.plotly_chart(fig)
@@ -825,7 +1176,8 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
                             )
 
                             fig.update_layout(
-                                title=dict(text=f'{selected_site_rate_cards} : Customers ({df_pCarton_customers_count}) : Carton Picking Rates'),
+                                title=dict(
+                                    text=f'{selected_site_rate_cards} : Customers ({df_pCarton_customers_count}) : Carton Picking Rates'),
                                 margin=dict(l=0, r=10, b=10, t=20))
                     else:
                         seperator = negative_separator if seperator == positive_separator else positive_separator
@@ -841,7 +1193,8 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
                         )
 
                         fig.update_layout(
-                            title=dict(text=f'{selected_site_rate_cards} : Customers ({df_pCarton_customers_count}) : Carton Picking Rates'),
+                            title=dict(
+                                text=f'{selected_site_rate_cards} : Customers ({df_pCarton_customers_count}) : Carton Picking Rates'),
                             margin=dict(l=0, r=10, b=10, t=20))
 
                 p4_Cartons.plotly_chart(fig)
@@ -958,8 +1311,8 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
 
                 selected_customer_pivot_pie_chart = selected_customer_pivot.drop(["Energy Surcharge",
                                                                                   "Other - Delayed Pallet Hire Revenue",
-                                                                                  "Other - 3rd Party Recharge Revenue" ]
-                                                                                 ,axis='index', errors='ignore')
+                                                                                  "Other - 3rd Party Recharge Revenue"]
+                                                                                 , axis='index', errors='ignore')
 
                 fig = px.pie(selected_customer_pivot_pie_chart, values=selected_customer_pivot_pie_chart[graph_values],
                              names=selected_customer_pivot_pie_chart.index.get_level_values(0),
@@ -969,7 +1322,8 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
                 st.plotly_chart(fig, use_container_width=True)
 
             except Exception:
-                st.markdown('#### Data has Negative Values or is in a State that cannot be used with is Visualisation. Please review excel file')
+                st.markdown(
+                    '#### Data has Negative Values or is in a State that cannot be used with is Visualisation. Please review excel file')
                 output955 = io.BytesIO()
                 with pd.ExcelWriter(output955) as writer:
                     selected_customer_pivot_pie_chart.to_excel(writer, sheet_name='export_data', index=False)
@@ -982,7 +1336,6 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
                     mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
                     key=969,
                 )
-
 
         st.divider()
 
@@ -1020,7 +1373,8 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
 
             st.plotly_chart(fig2, use_container_width=True)
         except Exception:
-            st.markdown('#### Data has Negative Values or is in a State that cannot be used with is Visualisation. Please review excel file')
+            st.markdown(
+                '#### Data has Negative Values or is in a State that cannot be used with is Visualisation. Please review excel file')
             output1006 = io.BytesIO()
             with pd.ExcelWriter(output1006) as writer:
                 select_CC_data_tab1.to_excel(writer, sheet_name='export_data', index=False)
@@ -1107,7 +1461,8 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
                 p1_Storage.plotly_chart(fig)
 
         except Exception:
-            st.markdown('#### Data has Negative Values or is in a State that cannot be used with is Visualisation. Please review excel file')
+            st.markdown(
+                '#### Data has Negative Values or is in a State that cannot be used with is Visualisation. Please review excel file')
             output1093 = io.BytesIO()
             with pd.ExcelWriter(output1093) as writer:
                 df_pStorage.to_excel(writer, sheet_name='export_data', index=False)
@@ -1178,8 +1533,9 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
                 )
 
                 p2_Handling.plotly_chart(fig)
-        except Exception :
-            st.markdown('#### Data has Negative Values or is in a State that cannot be used with is Visualisation. Please review excel file')
+        except Exception:
+            st.markdown(
+                '#### Data has Negative Values or is in a State that cannot be used with is Visualisation. Please review excel file')
             output1165 = io.BytesIO()
             with pd.ExcelWriter(output1165) as writer:
                 df_pHandling.to_excel(writer, sheet_name='export_data', index=False)
@@ -1247,7 +1603,8 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
 
                 p3_Wrapping.plotly_chart(fig)
         except Exception as e:
-            st.markdown('###### Data has Negative Values or is in a State that cannot be used with is Visualisation. Please review excel file')
+            st.markdown(
+                '###### Data has Negative Values or is in a State that cannot be used with is Visualisation. Please review excel file')
             output1233 = io.BytesIO()
             with pd.ExcelWriter(output1233) as writer:
                 df_pWrapping.to_excel(writer, sheet_name='export_data', index=False)
@@ -1333,7 +1690,8 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
                 key=211,
             )
         except Exception as e:
-            st.markdown('#### Data has Negative Values or is in a State that cannot be used with is Visualisation. Please review excel file')
+            st.markdown(
+                '#### Data has Negative Values or is in a State that cannot be used with is Visualisation. Please review excel file')
             output1319 = io.BytesIO()
             with pd.ExcelWriter(output1319) as writer:
                 select_CC_data.to_excel(writer, sheet_name='export_data', index=False)

@@ -8,7 +8,7 @@ def style_dataframe(df):
             'selector': 'th',
             'props': [
                 ('background-color', '#305496'),
-                # ('background-color', 'red'),
+                ('width', 'auto'),
                 ('color', 'white'),
                 ('font-family', 'sans-serif, Arial'),
                 ('font-size', '12px'),
@@ -98,5 +98,6 @@ def load_rates_standardisation(uploaded_file):
 def load_specific_xls_sheet( file, sheet_name, header, use_cols):
      cached_xls_sheet = pd.read_excel(file, sheet_name=sheet_name, header=header, usecols=use_cols)
      return cached_xls_sheet
+
 
 
