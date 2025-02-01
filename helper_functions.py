@@ -80,8 +80,8 @@ def sub_category_classification(dtframe):
 
 @st.cache_data
 def load_profitbility_Summary_model(uploaded_file):
-    customer_profitability_summary = pd.read_excel(uploaded_file, sheet_name="ChartData", header=5, usecols="B:BE")
-    customer_profitability_summary = customer_profitability_summary[customer_profitability_summary.Customer != 0]
+    customer_profitability_summary = pd.read_excel(uploaded_file, sheet_name="ChartData", header=5, usecols="B:BJ")
+    customer_profitability_summary = customer_profitability_summary[customer_profitability_summary[" Revenue"] > 0]
     # invoice_rates["Calumo Description"] = invoice_rates.apply(sub_category_classification, axis=1)
     # invoice_rates['formatted_date'] = pd.to_datetime(invoice_rates['InvoiceDate'])
     # invoice_rates.formatted_date = invoice_rates.formatted_date.dt.strftime('%Y-%m-%d')
