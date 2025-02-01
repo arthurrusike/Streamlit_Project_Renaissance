@@ -116,21 +116,19 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
 
     budget_data_2025 = budget_data_2025[["Year", "Site", "Revenue", "Ebitda", "Economic OHP", "Labour to Tot. Rev",
                                          "Direct Labor / Hour", "DL to Handling Rev", "Economic Utilization",
-                                         "Throughput Plt", "Total Pallets"
+                                         "Throughput Plt", "Total Pallets", "Physical OHP"
                                          ]]
 
-    budget_data_2025["Rev Per Pallet"] = budget_data_2025["Revenue"] / budget_data_2025["Economic OHP"]
-    budget_data_2025["Ebitda Per Pallet"] = budget_data_2025["Ebitda"] / budget_data_2025["Economic OHP"]
-    budget_data_2025["Turn"] = ((budget_data_2025["Throughput Plt"] / 2) / (budget_data_2025["Total Pallets"] / 12))
+    budget_data_2025["Rev Per Pallet"] = budget_data_2025["Revenue"] / (((budget_data_2025["Economic OHP"] / 12)) * 52)
+    budget_data_2025["Ebitda Per Pallet"] = budget_data_2025["Ebitda"] / (
+    (((budget_data_2025["Economic OHP"] / 12)) * 52))
+    budget_data_2025["Turn"] = ((budget_data_2025["Throughput Plt"] / 2) / ((budget_data_2025["Physical OHP"] / 12)))
     budget_data_2025.dropna(inplace=True)
-    budget_data_2025.drop(columns=["Throughput Plt", "Total Pallets"], axis=1, inplace=True)
+    budget_data_2025.drop(columns=["Throughput Plt", "Total Pallets", "Physical OHP"], axis=1, inplace=True)
     budget_comparison_years = budget_data_2025.Year.unique()
 
     # Customer Names for Selection in Select Box
     all_workday_customer_names = profitability_summary_file.Customer.unique()
-
-    # Cost Centre Names for Selection in Select Box
-    cost_centres = profitability_summary_file["Cost Center"].unique()
 
     # Site Names for Selection in Select Box
     site_list = list(profitability_summary_file.Site.unique())
@@ -143,6 +141,10 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
         title_holder.subheader("Project Renaissance", divider="blue")
         selected_site = cost_centres_selection.multiselect("Site :", site_list, site_list[:7])
 
+        # Cost Centre Names for Selection in Select Box
+        cost_centres = profitability_summary_file[profitability_summary_file["Site"].isin(selected_site)]
+        cost_centres = cost_centres["Cost Center"].unique()
+
         st.text("")
         st.text("")
         st.text("")
@@ -153,289 +155,276 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
             profitability_2023.Site.isin(selected_site)]
         select_Site_data_2023_pallets = customer_pallets[customer_pallets.Site.isin(selected_site)]
 
-        section1, section2, section3 = st.columns(
-            (len(selected_site) * 0.20, len(selected_site), len(selected_site) * .5))
+        with st.expander("Full Years Comparison - GAAP (USD Translation) ", expanded=True):
 
-        with section1:
-            selected_years = []
-            t1, t2, t3, t4 = st.columns((2, 1, 1, 1))
+            section1, section2, section3 = st.columns(
+                (len(selected_site) * 0.20, len(selected_site), len(selected_site) * .5))
 
-            with t1:
+            with section1:
+                selected_years = []
+                t1, t2, t3, t4 = st.columns((2, 1, 1, 1))
+
+                with t1:
+                    st.text("")
+                    st.text("")
+                    t1.markdown("##### Years")
+                    _2025 = t1.checkbox('2025', True)
+                    _2024 = t1.checkbox('2024')
+                    _2023 = t1.checkbox('2023')
+
+                if _2025:
+                    selected_years.append(2025)
+
+                if _2024:
+                    selected_years.append(2024)
+
+                if _2023:
+                    selected_years.append(2023)
+
+                budget_data_2025 = budget_data_2025[budget_data_2025.Year.isin(selected_years)]
+                budget_data_2025 = budget_data_2025[budget_data_2025.Site.isin(selected_site)]
+
+                budget_data_2025 = budget_data_2025.groupby(by=["Site", "Year"]).sum().reset_index()
+                budget_data_2025 = budget_data_2025.sort_values(by=["Site", "Year"], ascending=[False, False])
+
+                budget_data_2025_pivot = budget_data_2025
+                budget_data_2025.insert(0, "Description",
+                                        budget_data_2025_pivot["Site"] + " : " + budget_data_2025_pivot["Year"].astype(
+                                            str))
+                budget_data_2025_pivot = budget_data_2025_pivot.set_index("Description")
+
+
+                def format_for_percentage(value):
+                    return "{:.2%}".format(value)
+
+
+                def format_for_currency(value):
+                    return "${0:,.0f}".format(value)
+
+
+                def format_for_float_currency(value):
+                    return "${0:,.2f}".format(value)
+
+
+                def format_for_float(value):
+                    return "{0:,.2f}".format(value)
+
+
+                def format_for_int(value):
+                    return "{0:,.0f}".format(value)
+
+
+                budget_data_2025_pivot["Revenue"] = budget_data_2025_pivot["Revenue"].apply(format_for_currency)
+                budget_data_2025_pivot["Ebitda"] = budget_data_2025_pivot["Ebitda"].apply(format_for_currency)
+                budget_data_2025_pivot["Rev Per Pallet"] = budget_data_2025_pivot["Rev Per Pallet"].apply(
+                    format_for_float_currency)
+                budget_data_2025_pivot["Ebitda Per Pallet"] = budget_data_2025_pivot["Ebitda Per Pallet"].apply(
+                    format_for_float_currency)
+                budget_data_2025_pivot["Economic Utilization"] = budget_data_2025_pivot["Economic Utilization"].apply(
+                    format_for_percentage)
+                budget_data_2025_pivot["Economic OHP"] = budget_data_2025_pivot["Economic OHP"].apply(format_for_int)
+                budget_data_2025_pivot["Labour to Tot. Rev"] = budget_data_2025_pivot["Labour to Tot. Rev"].apply(
+                    format_for_percentage)
+                budget_data_2025_pivot["DL to Handling Rev"] = budget_data_2025_pivot["DL to Handling Rev"].apply(
+                    format_for_percentage)
+                budget_data_2025_pivot["Direct Labor / Hour"] = budget_data_2025_pivot["Direct Labor / Hour"].apply(
+                    format_for_float_currency)
+                budget_data_2025_pivot["Turn"] = budget_data_2025_pivot["Turn"].apply(format_for_float)
+
+                budget_data_2025_pivot = budget_data_2025_pivot.T
+
+                budget_data_2025_pivot = budget_data_2025_pivot[2:]
+
+                styles = [
+                    {
+                        'selector': ' tr:hover',
+                        'props': [
+                            ('border', '1px solid #4CAF50'),
+                            ('background-color', 'wheat'),
+
+                        ]
+                    },
+                    {
+                        'selector': ' tr',
+                        'props': [
+                            ('text-align', 'right'),
+                            ('font-size', '12px'),
+                            ('font-family', 'sans-serif, Arial'),
+
+                        ]
+                    }
+
+                ]
+
+                for column in budget_data_2025_pivot.columns:
+                    styles.append({
+
+                        'selector': f'th.col{budget_data_2025_pivot.columns.get_loc(column)}',
+                        'props': [
+                            ('background-color', '#305496'),
+                            ('width', 'auto'),
+                            ('color', 'white'),
+                            ('font-family', 'sans-serif, Arial'),
+                            ('font-size', '12px'),
+                            ('text-align', 'center'),
+                            ('border', '2px solid white')
+                        ],
+
+                    }
+                    )
+
+                budget_data_2025_pivot = budget_data_2025_pivot.style.set_table_styles(styles)
+
+            section2.markdown("##### Site Financial Summary")
+            section2.write(budget_data_2025_pivot.to_html(), unsafe_allow_html=True)
+
+            with section3:
                 st.text("")
                 st.text("")
-                t1.markdown("##### Years")
-                _2025 = t1.checkbox('2025', True)
-                _2024 = t1.checkbox('2024')
-                _2023 = t1.checkbox('2023')
+                st.text("")
 
-            if _2025:
-                selected_years.append(2025)
+                kpi1, kpi2, = st.columns(2)
 
-            if _2024:
-                selected_years.append(2024)
+                # with kpi1:
+                revenue_2024 = select_Site_data[" Revenue"].sum() / 1000
+                revenue_2023 = select_Site_data_2023_profitability[" Revenue"].sum() / 1000
+                delta = f"{((revenue_2024 / revenue_2023) - 1):,.1%}"
 
-            if _2023:
-                selected_years.append(2023)
+                kpi1.metric(label=f"FY24: Revenue - 000s", value=f"{revenue_2024:,.0f}", delta=f"{delta} vs LY ")
 
-            budget_data_2025_bench_mark = budget_data_2025
-            budget_data_2025 = budget_data_2025[budget_data_2025.Year.isin(selected_years)]
-            budget_data_2025 = budget_data_2025[budget_data_2025.Site.isin(selected_site)]
+                # with kpi2:
+                ebitda_2024 = select_Site_data["EBITDA $"].sum() / 1000
+                ebitda_2023 = select_Site_data_2023_profitability["EBITDA $"].sum() / 1000
+                delta = f"{((ebitda_2024 / ebitda_2023) - 1):,.1%}"
 
-            budget_data_2025 = budget_data_2025.groupby(by=["Site", "Year"]).sum().reset_index()
-            budget_data_2025 = budget_data_2025.sort_values(by=["Site", "Year"], ascending=[False, False])
+                ebitda_margin = f"{(ebitda_2024 / revenue_2024):,.1%}"
 
-            budget_data_2025_pivot = budget_data_2025
-            budget_data_2025.insert(0, "Description",
-                                    budget_data_2025_pivot["Site"] + " : " + budget_data_2025_pivot["Year"].astype(str))
-            budget_data_2025_pivot = budget_data_2025_pivot.set_index("Description")
+                kpi2.metric(label=f"FY24: EBITDA - 000s", value=f"{ebitda_2024:,.0f}",
+                            delta=f"{delta} | FY24 → {ebitda_margin}   ")
+                st.text("")
+                st.text("")
 
+                kpi3, kpi4, = st.columns(2)
 
-            def format_for_percentage(value):
-                return "{:.2%}".format(value)
+                dominic_report_2024 = dominic_report[
+                    (dominic_report.Year == 2024) & (dominic_report.Month == "December")]
+                dominic_report_2024["Site"] = dominic_report_2024["Cost Centers"].apply(extract_site)
+                dominic_report_2024 = dominic_report_2024[dominic_report_2024.Site.isin(selected_site)]
 
+                dominic_report_2023 = dominic_report[
+                    (dominic_report.Year == 2023) & (dominic_report.Month == "December")]
+                dominic_report_2023["Site"] = dominic_report_2023["Cost Centers"].apply(extract_site)
+                dominic_report_2023 = dominic_report_2023[dominic_report_2023.Site.isin(selected_site)]
 
-            def format_for_currency(value):
-                return "${0:,.0f}".format(value)
+                economic_pallets_2024 = dominic_report_2024["Economic Pallet Total"].sum()
+                capacity_2024 = dominic_report_2024.Denominator.sum()
 
+                economic_pallets_2023 = dominic_report_2023["Economic Pallet Total"].sum()
+                capacity_2023 = dominic_report_2023.Denominator.sum()
 
-            def format_for_float_currency(value):
-                return "${0:,.2f}".format(value)
+                dec_2024_occupancy = economic_pallets_2024 / capacity_2024
+                dec_2023_occupancy = economic_pallets_2023 / capacity_2023
 
+                delta = f"{((dec_2024_occupancy / dec_2023_occupancy) - 1):,.1%}"
 
-            def format_for_float(value):
-                return "{0:,.2f}".format(value)
+                kpi3.metric(label=f"Economic Occupancy", value=f"{dec_2024_occupancy:,.1%}", delta=f"{delta} ")
 
+                # with kpi4:
+                volume_guarantee_2024 = select_Site_data_2023_pallets["VG Pallets - Dec-2024"].sum()
+                volume_guarantee_2023 = select_Site_data_2023_pallets["VG Pallets - Dec-2023"].sum()
 
-            def format_for_int(value):
-                return "{0:,.0f}".format(value)
+                delta = f"{(volume_guarantee_2024 / capacity_2024):,.1%} : of Capacity is VG "
 
-
-            budget_data_2025_pivot["Revenue"] = budget_data_2025_pivot["Revenue"].apply(format_for_currency)
-            budget_data_2025_pivot["Ebitda"] = budget_data_2025_pivot["Ebitda"].apply(format_for_currency)
-            budget_data_2025_pivot["Rev Per Pallet"] = budget_data_2025_pivot["Rev Per Pallet"].apply(
-                format_for_float_currency)
-            budget_data_2025_pivot["Ebitda Per Pallet"] = budget_data_2025_pivot["Ebitda Per Pallet"].apply(
-                format_for_float_currency)
-            budget_data_2025_pivot["Economic Utilization"] = budget_data_2025_pivot["Economic Utilization"].apply(
-                format_for_percentage)
-            budget_data_2025_pivot["Economic OHP"] = budget_data_2025_pivot["Economic OHP"].apply(format_for_int)
-            budget_data_2025_pivot["Labour to Tot. Rev"] = budget_data_2025_pivot["Labour to Tot. Rev"].apply(
-                format_for_percentage)
-            budget_data_2025_pivot["DL to Handling Rev"] = budget_data_2025_pivot["DL to Handling Rev"].apply(
-                format_for_percentage)
-            budget_data_2025_pivot["Direct Labor / Hour"] = budget_data_2025_pivot["Direct Labor / Hour"].apply(
-                format_for_float_currency)
-            budget_data_2025_pivot["Turn"] = budget_data_2025_pivot["Turn"].apply(format_for_float)
-
-            budget_data_2025_pivot = budget_data_2025_pivot.T
-
-            budget_data_2025_pivot = budget_data_2025_pivot[2:]
-
-            styles = [
-                {
-                    'selector': ' tr:hover',
-                    'props': [
-                        ('border', '1px solid #4CAF50'),
-                        ('background-color', 'wheat'),
-
-                    ]
-                },
-                {
-                    'selector': ' tr',
-                    'props': [
-                        ('text-align', 'right'),
-                        ('font-size', '12px'),
-                        ('font-family', 'sans-serif, Arial'),
-
-                    ]
-                }
-
-            ]
-
-            for column in budget_data_2025_pivot.columns:
-                styles.append({
-
-                    'selector': f'th.col{budget_data_2025_pivot.columns.get_loc(column)}',
-                    'props': [
-                        ('background-color', '#305496'),
-                        ('width', 'auto'),
-                        ('color', 'white'),
-                        ('font-family', 'sans-serif, Arial'),
-                        ('font-size', '12px'),
-                        ('text-align', 'center'),
-                        ('border', '2px solid white')
-                    ],
-
-                }
-                )
-
-            budget_data_2025_pivot = budget_data_2025_pivot.style.set_table_styles(styles)
-
-            # budget_data_2025_pivot = budget_data_2025_pivot.set_table_styles({
-            #     'Description': [{'selector': 'th', 'props': [('color', 'red')]}],
-            #
-            # })
-        section2.markdown("##### Site Financial Summary")
-        section2.write(budget_data_2025_pivot.to_html(), unsafe_allow_html=True)
-
-        # budget_data_2025 = budget_data_2025.style.hide(axis="index")
-        #
-        # budget_data_2025 = budget_data_2025.hide(["Economic OHP", 'Direct Labor / Hour', 'DL to Handling Rev',
-        #                                           'Labour to Tot. Rev'], axis='columns')
-        #
-        # budget_data_2025 = budget_data_2025.format({
-        #     "Year": '{0:,.0f}',
-        #     'Revenue': "${0:,.0f}",
-        #     'Ebitda': "${0:,.0f}",
-        #     'Ebitda Per Pallet': "${0:,.2f}",
-        #     'Rev Per Pallet': "${0:,.2f}",
-        #     'Economic Utilization': "{0:,.2%}",
-        #     'Direct Labor / Hour': "${0:,.2f}",
-        #     'DL to Handling Rev': "{0:,.2%}",
-        #     'Labour to Tot. Rev': "{0:,.2%}",
-        # })
-        #
-        # budget_data_2025 = budget_data_2025.map(highlight_negative_values)
-        #
-        # budget_data_2025 = style_dataframe(budget_data_2025)
-        #
-        # section2.write(budget_data_2025.to_html(), unsafe_allow_html=True)
-
-        with section3:
-            st.text("")
+                kpi4.metric(label=f"Volume Guarantee", value=f"{volume_guarantee_2024:,.0f}", delta=f"{delta} ")
             st.text("")
             st.text("")
 
-            kpi1, kpi2, = st.columns(2)
+        st.subheader("", divider='rainbow')
 
-            # with kpi1:
-            revenue_2024 = select_Site_data[" Revenue"].sum() / 1000
-            revenue_2023 = select_Site_data_2023_profitability[" Revenue"].sum() / 1000
-            delta = f"{((revenue_2024 / revenue_2023) - 1):,.1%}"
+        st.text("")
+        st.text("")
 
-            kpi1.metric(label=f"FY24: Revenue - 000s", value=f"{revenue_2024:,.0f}", delta=f"{delta} vs LY ")
+        with st.expander("2024 Financial and KPI Summaries - Adjusted for Market Rent", expanded=True):
 
-            # with kpi2:
-            ebitda_2024 = select_Site_data["EBITDA $"].sum() / 1000
-            ebitda_2023 = select_Site_data_2023_profitability["EBITDA $"].sum() / 1000
-            delta = f"{((ebitda_2024 / ebitda_2023) - 1):,.1%}"
+            fin1, fin2 = st.columns(2)
 
-            ebitda_margin = f"{(ebitda_2024 / revenue_2024):,.1%}"
+            key_metrics_data = profitability_summary_file[profitability_summary_file[" Revenue"] > 1]
+            key_metrics_data = key_metrics_data[key_metrics_data.Site.isin(selected_site)]
+            key_metrics_data["Name"] = key_metrics_data["Cost Center"].apply(extract_cost_name)
 
-            kpi2.metric(label=f"FY24: EBITDA - 000s", value=f"{ebitda_2024:,.0f}",
-                        delta=f"{delta} | FY24 → {ebitda_margin}   ")
-            st.text("")
-            st.text("")
+            # key_metrics_data["Sqm Rent"] = key_metrics_data['Rent Expense,\n$'] / key_metrics_data['sqm']
 
-            kpi3, kpi4, = st.columns(2)
+            key_metrics_data_pivot = pd.pivot_table(key_metrics_data, index=["Cost Center", "Name"],
+                                                    values=[" Revenue", 'EBITDAR $', 'Rent Expense,\n$',
+                                                            'EBITDA $',
+                                                            # 'Sqm Rent'
+                                                            ],
+                                                    aggfunc='sum')
 
-            dominic_report_2024 = dominic_report[(dominic_report.Year == 2024) & (dominic_report.Month == "December")]
-            dominic_report_2024["Site"] = dominic_report_2024["Cost Centers"].apply(extract_site)
-            dominic_report_2024 = dominic_report_2024[dominic_report_2024.Site.isin(selected_site)]
+            key_metrics_data_pivot = key_metrics_data_pivot.reset_index("Name")
 
-            dominic_report_2023 = dominic_report[(dominic_report.Year == 2023) & (dominic_report.Month == "December")]
-            dominic_report_2023["Site"] = dominic_report_2023["Cost Centers"].apply(extract_site)
-            dominic_report_2023 = dominic_report_2023[dominic_report_2023.Site.isin(selected_site)]
+            key_metrics_data_pivot = key_metrics_data_pivot.style.hide(axis="index")
 
-            economic_pallets_2024 = dominic_report_2024["Economic Pallet Total"].sum()
-            capacity_2024 = dominic_report_2024.Denominator.sum()
+            key_metrics_data_pivot = key_metrics_data_pivot.format({
+                " Revenue": '${0:,.0f}',
+                'EBITDAR $': "${0:,.0f}",
+                'Rent Expense,\n$': "${0:,.0f}",
+                'EBITDA $': "${0:,.0f}",
+                # 'Sqm Rent': "${0:,.2f}",
+            })
 
-            economic_pallets_2023 = dominic_report_2023["Economic Pallet Total"].sum()
-            capacity_2023 = dominic_report_2023.Denominator.sum()
+            key_metrics_data_pivot = key_metrics_data_pivot.map(highlight_negative_values)
 
-            dec_2024_occupancy = economic_pallets_2024 / capacity_2024
-            dec_2023_occupancy = economic_pallets_2023 / capacity_2023
+            key_metrics_data_pivot = style_dataframe(key_metrics_data_pivot)
 
-            delta = f"{((dec_2024_occupancy / dec_2023_occupancy) - 1):,.1%}"
+            with fin1:
+                fin1.markdown("##### Financial Summary")
+                fin1.write(key_metrics_data_pivot.to_html(), unsafe_allow_html=True)
 
-            kpi3.metric(label=f"Economic Occupancy", value=f"{dec_2024_occupancy:,.1%}", delta=f"{delta} ")
+            key_metrics_data = key_metrics_data.groupby("CC").sum()
 
-            # with kpi4:
-            volume_guarantee_2024 = select_Site_data_2023_pallets["VG Pallets - Dec-2024"].sum()
-            volume_guarantee_2023 = select_Site_data_2023_pallets["VG Pallets - Dec-2023"].sum()
+            DL_Handling = key_metrics_data["Direct Labor Expense,\n$"]
+            Ttl_Labour = key_metrics_data["Total Labor Expense, $"]
+            Service_Revenue = key_metrics_data["Service Rev (Handling+ Case Pick+ Other Rev)"]
 
-            delta = f"{(volume_guarantee_2024 / capacity_2024):,.1%} : of Capacity is VG "
+            key_metrics_data["Rev Per Plt"] = key_metrics_data[" Revenue"] / (key_metrics_data["Pallet"] * 52)
+            key_metrics_data["EBITDA Per Plt"] = key_metrics_data["EBITDA $"] / (key_metrics_data["Pallet"] * 52)
+            key_metrics_data["Turn"] = ((key_metrics_data["TTP p.w."] / 2) * 52) / key_metrics_data["Pallet"]
+            key_metrics_data["DL %"] = DL_Handling / Service_Revenue
+            key_metrics_data["LTR %"] = Ttl_Labour / key_metrics_data[" Revenue"]
+            key_metrics_data["Rev Per SQM"] = key_metrics_data[" Revenue"] / key_metrics_data["sqm"]
+            key_metrics_data["EBITDA Per SQM"] = key_metrics_data["EBITDA $"] / key_metrics_data["sqm"]
+            key_metrics_data["Rent Per SQM"] = key_metrics_data['Rent Expense,\n$'] / key_metrics_data['sqm']
+            # key_metrics_data["Site Pal Cap psqm"] = key_metrics_data['Site Pal Cap psqm']
 
-            kpi4.metric(label=f"Volume Guarantee", value=f"{volume_guarantee_2024:,.0f}", delta=f"{delta} ")
+            kpi_key_metrics_data_pivot = key_metrics_data[
+                ["Rev Per Plt", "EBITDA Per Plt", "Turn", "DL %", "LTR %", "Rev Per SQM",
+                 "EBITDA Per SQM", "Rent Per SQM"
+                 # "Site Pal Cap psqm"
+                 ]]
 
-        st.divider()
+            budget_data_2025_bench_mark = kpi_key_metrics_data_pivot
 
-        fin1, fin2 = st.columns(2)
+            kpi_key_metrics_data_pivot = kpi_key_metrics_data_pivot.style.hide(axis="index")
 
-        key_metrics_data = profitability_summary_file[profitability_summary_file[" Revenue"] > 1]
-        key_metrics_data = key_metrics_data[key_metrics_data.Site.isin(selected_site)]
-        key_metrics_data["Name"] = key_metrics_data["Cost Center"].apply(extract_cost_name)
-        # key_metrics_data["Sqm Rent"] = key_metrics_data['Rent Expense,\n$'] / key_metrics_data['sqm']
+            kpi_key_metrics_data_pivot = kpi_key_metrics_data_pivot.format({
+                'Rev Per Plt': "${0:,.2f}",
+                'EBITDA Per Plt': "${0:,.2f}",
+                'Turn': "{0:,.2f}",
+                'DL %': '{0:,.1%}',
+                'LTR %': '{0:,.1%}',
+                'Rev Per SQM': "${0:,.2f}",
+                'EBITDA Per SQM': "${0:,.2f}",
+                'Rent Per SQM': "${0:,.2f}",
+            })
 
-        key_metrics_data_pivot = pd.pivot_table(key_metrics_data, index=["Cost Center", "Name"],
-                                                values=[" Revenue", 'EBITDAR $', 'Rent Expense,\n$',
-                                                        'EBITDA $',
-                                                        # 'Sqm Rent'
-                                                        ],
-                                                aggfunc='sum')
+            kpi_key_metrics_data_pivot = kpi_key_metrics_data_pivot.map(highlight_negative_values)
 
-        key_metrics_data_pivot = key_metrics_data_pivot.reset_index("Name")
+            kpi_key_metrics_data_pivot = style_dataframe(kpi_key_metrics_data_pivot)
 
-        key_metrics_data_pivot = key_metrics_data_pivot.style.hide(axis="index")
-
-        key_metrics_data_pivot = key_metrics_data_pivot.format({
-            " Revenue": '${0:,.0f}',
-            'EBITDAR $': "${0:,.0f}",
-            'Rent Expense,\n$': "${0:,.0f}",
-            'EBITDA $': "${0:,.0f}",
-            # 'Sqm Rent': "${0:,.2f}",
-        })
-
-        key_metrics_data_pivot = key_metrics_data_pivot.map(highlight_negative_values)
-
-        key_metrics_data_pivot = style_dataframe(key_metrics_data_pivot)
-
-        with fin1:
-            fin1.markdown("##### Financial Summary")
-            fin1.write(key_metrics_data_pivot.to_html(), unsafe_allow_html=True)
-
-        key_metrics_data = key_metrics_data.groupby("CC").sum()
-
-        DL_Handling = key_metrics_data["Direct Labor Expense,\n$"]
-        Ttl_Labour = key_metrics_data["Total Labor Expense, $"]
-        Service_Revenue = key_metrics_data["Service Rev (Handling+ Case Pick+ Other Rev)"]
-
-        key_metrics_data["Rev Per Plt"] = key_metrics_data[" Revenue"] / key_metrics_data["Pallet"]
-        key_metrics_data["EBITDA Per Plt"] = key_metrics_data["EBITDA $"] / key_metrics_data["Pallet"]
-        key_metrics_data["Turn"] = ((key_metrics_data["TTP p.w."] / 2) * 52) / key_metrics_data["Pallet"]
-        key_metrics_data["DL %"] = DL_Handling / Service_Revenue
-        key_metrics_data["LTR %"] = Ttl_Labour / key_metrics_data[" Revenue"]
-        key_metrics_data["Rev Per SQM"] = key_metrics_data[" Revenue"] / key_metrics_data["sqm"]
-        key_metrics_data["EBITDA Per SQM"] = key_metrics_data["EBITDA $"] / key_metrics_data["sqm"]
-        key_metrics_data["Rent Per SQM"] = key_metrics_data['Rent Expense,\n$'] / key_metrics_data['sqm']
-        # key_metrics_data["Site Pal Cap psqm"] = key_metrics_data['Site Pal Cap psqm']
-
-        kpi_key_metrics_data_pivot = key_metrics_data[
-            ["Rev Per Plt", "EBITDA Per Plt", "Turn", "DL %", "LTR %", "Rev Per SQM",
-             "EBITDA Per SQM", "Rent Per SQM",
-             # "Site Pal Cap psqm"
-             ]]
-
-        kpi_key_metrics_data_pivot = kpi_key_metrics_data_pivot.style.hide(axis="index")
-
-        kpi_key_metrics_data_pivot = kpi_key_metrics_data_pivot.format({
-            'Rev Per Plt': "${0:,.2f}",
-            'EBITDA Per Plt': "${0:,.2f}",
-            'Turn': "{0:,.2f}",
-            'DL %': '{0:,.1%}',
-            'LTR %': '{0:,.1%}',
-            'Rev Per SQM': "${0:,.2f}",
-            'EBITDA Per SQM': "${0:,.2f}",
-            'Rent Per SQM': "${0:,.2f}",
-        })
-
-        kpi_key_metrics_data_pivot = kpi_key_metrics_data_pivot.map(highlight_negative_values)
-
-        kpi_key_metrics_data_pivot = style_dataframe(kpi_key_metrics_data_pivot)
-
-        with fin2:
-            fin2.markdown("##### KPI Summary")
-            fin2.write(kpi_key_metrics_data_pivot.to_html(), unsafe_allow_html=True)
+            with fin2:
+                fin2.markdown("##### KPI Summary")
+                fin2.write(kpi_key_metrics_data_pivot.to_html(), unsafe_allow_html=True)
 
         st.divider()
 
@@ -515,22 +504,6 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
 
         st.write(display_data.to_html(), unsafe_allow_html=True, use_container_width=True)
 
-        # selected_graph = st.selectbox("Display :", [" Revenue", 'EBITDA $', 'EBITDA Margin\n%', 'EBITDA per Pallet',
-        #                                                 'Revenue per Pallet',
-        #                                                 'Pallet', 'TTP p.w.'], index=0)
-        #
-
-        # fig = px.bar(display_data_pie[selected_graph],
-        #              x=selected_graph,
-        #              y=display_data_pie.Name,
-        #              # title=f'{selected_graph} View',
-        #              height=len(display_data_pie) * 50,
-        #              orientation='h')
-        #
-        # fig.update_layout(yaxis={'categoryorder': 'total ascending'})
-        #
-        # st.plotly_chart(fig, use_container_width=True)
-
         st.text("")
         st.text("")
         st.text("")
@@ -546,17 +519,22 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
 
             site_benchmark = selected_cost_centre.split(" - ")[1].strip().title()
 
-            budget_data_2025_bench_mark = budget_data_2025_bench_mark.loc[
-                budget_data_2025_bench_mark["Site"] == site_benchmark]
-            budget_data_2025_bench_mark = budget_data_2025_bench_mark.loc[budget_data_2025_bench_mark["Year"] == 2024]
+            selected_site.append(str(site_benchmark))
+
+            site_benchmark_cc = selected_cost_centre.split(" AU")[0]
+
+            budget_data_2025_bench_mark = budget_data_2025_bench_mark.loc[budget_data_2025_bench_mark.index == site_benchmark_cc]
+
 
             _a, b1, b2, b3, _b = st.columns((1, 3, 3, 3, 1))
 
             with b1:
-                rank_display_data_benchmark["Site Rev Per Pallet"] = budget_data_2025_bench_mark[
-                    "Rev Per Pallet"].mean()
+                rank_display_data_benchmark["Site Rev Per Pallet"] = budget_data_2025_bench_mark["Rev Per Plt"].values
 
                 df = rank_display_data_benchmark[["Revenue per Pallet", "Site Rev Per Pallet"]]
+
+                # st.dataframe(rank_display_data_benchmark)
+
                 df = df.T
                 fig = make_subplots(rows=2, cols=2, shared_yaxes=False, column_widths=[100, 100],
                                     row_heights=[250, 250],
@@ -588,7 +566,7 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
 
             with b2:
                 rank_display_data_benchmark["Site Ebitda Per Pallet"] = budget_data_2025_bench_mark[
-                    "Ebitda Per Pallet"].mean()
+                    "EBITDA Per Plt"].values
 
                 df = rank_display_data_benchmark[["EBITDA per Pallet", "Site Ebitda Per Pallet"]]
                 df = df.T
@@ -620,10 +598,7 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
                 b2.plotly_chart(fig, use_container_width=True, key=455)
 
             with b3:
-                # rank_display_data_benchmark["Site Pallet Turns"] = budget_data_2025_bench_mark[
-                #     "Stock Pallet Turn"].mean()
-
-                rank_display_data_benchmark["Site Pallet Turns"] = 10
+                rank_display_data_benchmark["Site Pallet Turns"] = budget_data_2025_bench_mark["Turn"].values
 
                 df = rank_display_data_benchmark[["Turn", "Site Pallet Turns"]]
                 df = df.T
@@ -657,8 +632,7 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
             _c, c1, c2, _d = st.columns((1, 3, 3, 1))
 
             with c1:
-                rank_display_data_benchmark["Site DL Per Pallet"] = budget_data_2025_bench_mark[
-                    "DL to Handling Rev"].mean()
+                rank_display_data_benchmark["Site DL Per Pallet"] = budget_data_2025_bench_mark["DL %"].values
 
                 df = rank_display_data_benchmark[["DLH% \n(DL / Service Rev)", "Site DL Per Pallet"]]
                 df = df.T
@@ -690,7 +664,7 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
                 b1.plotly_chart(fig, use_container_width=True, key=486)
 
             with c2:
-                rank_display_data_benchmark["Site LTR"] = budget_data_2025_bench_mark["Labour to Tot. Rev"].mean()
+                rank_display_data_benchmark["Site LTR"] = budget_data_2025_bench_mark["LTR %"].values
 
                 df = rank_display_data_benchmark[["LTR % (Labour to Rev %)", "Site LTR"]]
                 df = df.T
@@ -771,7 +745,8 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
             rank1, rank2 = st.columns((3, 0.1))
             with rank1:
 
-                rank_display_data["Stock Turn Times"] =  (((rank_display_data["TTP p.w."]/2)*52) / rank_display_data["Pallet"])
+                rank_display_data["Stock Turn Times"] = (
+                            ((rank_display_data["TTP p.w."] / 2) * 52) / rank_display_data["Pallet"])
                 rank_display_data["Rev Rank"] = rank_display_data[" Revenue"].rank(method='max', ascending=False)
                 rank_display_data["EBITDA"] = rank_display_data["EBITDA $"].rank(method='max', ascending=False)
                 rank_display_data["Margin %"] = rank_display_data["EBITDA Margin\n%"]
@@ -782,12 +757,13 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
                 rank_display_data["Turn"] = rank_display_data["Stock Turn Times"].rank(method='max', ascending=False)
                 rank_display_data["Pallets"] = rank_display_data["Pallet"].rank(method='max', ascending=False)
                 rank_display_data["TTP"] = rank_display_data["TTP p.w."].rank(method='max', ascending=False)
+
+
                 # rank_display_data["Score"] = ((+ rank_display_data["EBITDA"] \
                 #                                + rank_display_data["Margin %"] + rank_display_data["Rev | Pallet"] \
                 #                                + rank_display_data["EBITDA | Plt"] + rank_display_data["Turns"] \
                 #                                + rank_display_data["Pallets"] + rank_display_data["TTP"]) / 7) / \
                 #                              rank_display_data["Rev Rank"]
-
 
                 def calculate_score_card(df):
 
@@ -795,7 +771,7 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
                     revenue_score_min = 0
                     revenue_score_max = df["Revenue per Pallet"].max()
                     normalised_revenue_score = (revenue_score - revenue_score_min) / (
-                                revenue_score_max - revenue_score_min)
+                            revenue_score_max - revenue_score_min)
 
                     ebitda_score = df["EBITDA per Pallet"]
                     ebitda_score_min = 0
@@ -820,18 +796,18 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
                     normalised_pallet_score = (margin_score - margin_score_min
                                                ) / (margin_score_max - margin_score_min)
 
-                    final_score = (normalised_revenue_score * (revenue_per_pallet_weighting/100)) + (
-                                normalised_ebitda_score * (ebitda_pallet_weighting/100)) + (
-                                              normalised_pallet_score * (margin_weighting/100)) + (
-                                              normalised_dl_ratio_score * (direct_labour_ratio_weighting/100)) + (
-                                              normalised_turn_score * (stock_turn_weighting/100))
+                    final_score = (normalised_revenue_score * (revenue_per_pallet_weighting / 100)) + (
+                            normalised_ebitda_score * (ebitda_pallet_weighting / 100)) + (
+                                          normalised_pallet_score * (margin_weighting / 100)) + (
+                                          normalised_dl_ratio_score * (direct_labour_ratio_weighting / 100)) + (
+                                          normalised_turn_score * (stock_turn_weighting / 100))
 
-                    df["Score"] = (final_score *4 )+ 1
+                    df["Score"] = (final_score * 4) + 1
 
                     return df
 
-                calculate_score_card(rank_display_data)
 
+                calculate_score_card(rank_display_data)
 
                 rank_display_data["Score"] = [1 if y < 1000 else x for x, y in
                                               zip(rank_display_data["Score"], rank_display_data["EBITDA $"])]
@@ -871,17 +847,18 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
                             return "Excellent to have Customer"
 
 
-                rank_display_data["Comment"] = rank_display_data["Score Card"].apply(add_comment)
+                rank_display_data["Comment"] = (rank_display_data["Score Card"].apply(add_comment))
 
                 columns_to_hide = [" Revenue", 'EBITDA $', 'EBITDA Margin\n%', 'EBITDA per Pallet',
-                                   'Revenue per Pallet','sqm', 'Rent psqm'
-                                   'Pallet', 'TTP p.w.', 'Stock Turn Times']
+                                   'Revenue per Pallet', 'sqm', 'Rent psqm'
+                                                                'Pallet', 'TTP p.w.', 'Stock Turn Times']
 
                 rank_display_data = rank_display_data.style.hide(axis="index")
-                rank_display_data = rank_display_data.hide([" Revenue", 'EBITDA $','EBITDA Margin\n%',
+                rank_display_data = rank_display_data.hide([" Revenue", 'EBITDA $', 'EBITDA Margin\n%',
                                                             'EBITDA per Pallet', 'Revenue per Pallet', 'Pallet',
-                                                            'TTP p.w.','sqm', 'Rent psqm','Stock Turn Times', "Rev psqm", "EBITDA psqm"
-                                                            , 'Rank', "DLH% \n(DL / Service Rev)",
+                                                            'TTP p.w.', 'sqm', 'Rent psqm', 'Stock Turn Times',
+                                                            "Rev psqm", "EBITDA psqm"
+                                                               , 'Rank', "DLH% \n(DL / Service Rev)",
                                                             "LTR % (Labour to Rev %)"], axis="columns")
 
                 rank_display_data = rank_display_data.format({
@@ -1331,7 +1308,7 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
         selected_customer_pivot = pd.pivot_table(selected_customer,
                                                  values=["Quantity", "LineAmount"],
                                                  index=["Revenue_Category", "Workday_Sales_Item_Name"],
-                                                 aggfunc="sum")
+                                                 aggfunc="sum").reset_index()
         selected_customer_pivot[
             "Avg Rate"] = selected_customer_pivot.LineAmount / selected_customer_pivot.Quantity
 
@@ -1352,7 +1329,10 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
 
             selected_customer_pivot_table = selected_customer_pivot_table.map(highlight_negative_values)
 
-            st.dataframe(selected_customer_pivot_table)
+            selected_customer_pivot_table = style_dataframe((selected_customer_pivot_table))
+            selected_customer_pivot_table = selected_customer_pivot_table.hide(axis="index")
+
+            st.write(selected_customer_pivot_table.to_html(), unsafe_allow_html=True)
 
             # Convert DataFrame to Excel
             output891 = io.BytesIO()
@@ -1378,22 +1358,21 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
                           border=True)
 
             with kpi2:
-                pallet_billed_services = ['Accessorial - Shrink Wrap', 'Blast Freezing', 'Handling - Initial',
-                                          'Handling Out',
-                                          'Storage - Initial', 'Storage - Renewal']
+                pallet_billed_services = [ 'Blast Freezing', 'Storage - Initial', 'Storage - Renewal']
 
                 filtered_data = \
                     selected_customer[selected_customer["Revenue_Category"].isin(pallet_billed_services)][
                         "LineAmount"].sum()
                 ancillary_data = selected_customer["LineAmount"].sum() - filtered_data
 
-                st.metric(label="Billed Pallet Rev  ", value=f"${filtered_data:,.0f} ",
-                          delta="excl Volume Guarantee ",
-                          border=True)
+                filtered_data_contribution = filtered_data / (filtered_data + ancillary_data)
+
+                st.metric(label="Rent & Storage & Blast", value=f"${filtered_data:,.0f} ",
+                          delta=f"{filtered_data_contribution:,.0%} : of Revenue", border=True)
 
             with kpi3:
-                st.metric(label="Billed Ancillary Rev", value=f"${ancillary_data:,.0f}",
-                          border=True, )
+                st.metric(label="Services", value=f"${ancillary_data:,.0f}",
+                          delta=f"{1-filtered_data_contribution:,.0%} : of Revenue", border=True)
 
         with col2:
             try:
@@ -1411,10 +1390,10 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
                                                                                  , axis='index', errors='ignore')
 
                 fig = px.pie(selected_customer_pivot_pie_chart, values=selected_customer_pivot_pie_chart[graph_values],
-                             names=selected_customer_pivot_pie_chart.index.get_level_values(0),
+                             names=selected_customer_pivot_pie_chart["Revenue_Category"],
                              title=f'{selected_graph} View',
                              height=300, width=200)
-                fig.update_layout(margin=dict(l=20, r=20, t=30, b=0), )
+                fig.update_layout(margin=dict(l=0, r=0, t=0, b=0), )
                 st.plotly_chart(fig, use_container_width=True)
 
             except Exception:
