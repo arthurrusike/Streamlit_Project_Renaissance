@@ -115,16 +115,24 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
     budget_data_2025 = load_specific_xls_sheet(customer_rates_file, "2025_Budget", 0, "A:AP")
 
     budget_data_2025 = budget_data_2025[["Year", "Site", "Revenue", "Ebitda", "Economic OHP", "Labour to Tot. Rev",
-                                         "Direct Labor / Hour", "DL to Handling Rev", "Economic Utilization",
-                                         "Throughput Plt", "Total Pallets", "Physical OHP"
+                                         "Direct Labor / Hour", "DL to Svcs Rev", "Economic Utilization", "Services",
+                                         "Throughput Plt", "Total Pallets", "Physical OHP", "Rent & Storage & Blast"
                                          ]]
 
-    budget_data_2025["Rev Per Pallet"] = budget_data_2025["Revenue"] / (((budget_data_2025["Economic OHP"] / 12)) * 52)
+    budget_data_2025["Rev Per Pallet"] = budget_data_2025["Revenue"] / ((budget_data_2025["Economic OHP"] / 12) * 52)
     budget_data_2025["Ebitda Per Pallet"] = budget_data_2025["Ebitda"] / (
-    (((budget_data_2025["Economic OHP"] / 12)) * 52))
-    budget_data_2025["Turn"] = ((budget_data_2025["Throughput Plt"] / 2) / ((budget_data_2025["Physical OHP"] / 12)))
+        ((budget_data_2025["Economic OHP"] / 12) * 52))
+    budget_data_2025["Turn"] = ((budget_data_2025["Throughput Plt"] / 2) / (budget_data_2025["Physical OHP"] / 12))
+
+    budget_data_2025["Rev - Storage & Blast"] = budget_data_2025["Rent & Storage & Blast"] / (
+            budget_data_2025["Rent & Storage & Blast"] + budget_data_2025["Services"])
+
+    budget_data_2025["Rev - Services"] = budget_data_2025["Services"] / (
+            budget_data_2025["Rent & Storage & Blast"] + budget_data_2025["Services"])
     budget_data_2025.dropna(inplace=True)
-    budget_data_2025.drop(columns=["Throughput Plt", "Total Pallets", "Physical OHP"], axis=1, inplace=True)
+    budget_data_2025.drop(
+        columns=["Throughput Plt", "Total Pallets", "Physical OHP", "Services", "Rent & Storage & Blast"], axis=1,
+        inplace=True)
     budget_comparison_years = budget_data_2025.Year.unique()
 
     # Customer Names for Selection in Select Box
@@ -222,14 +230,19 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
                     format_for_float_currency)
                 budget_data_2025_pivot["Economic Utilization"] = budget_data_2025_pivot["Economic Utilization"].apply(
                     format_for_percentage)
-                budget_data_2025_pivot["Economic OHP"] = budget_data_2025_pivot["Economic OHP"].apply(format_for_int)
+                budget_data_2025_pivot["Economic OHP"] = (budget_data_2025_pivot["Economic OHP"] / 12).apply(
+                    format_for_int)
                 budget_data_2025_pivot["Labour to Tot. Rev"] = budget_data_2025_pivot["Labour to Tot. Rev"].apply(
                     format_for_percentage)
-                budget_data_2025_pivot["DL to Handling Rev"] = budget_data_2025_pivot["DL to Handling Rev"].apply(
+                budget_data_2025_pivot["DL to Svcs Rev"] = budget_data_2025_pivot["DL to Svcs Rev"].apply(
                     format_for_percentage)
                 budget_data_2025_pivot["Direct Labor / Hour"] = budget_data_2025_pivot["Direct Labor / Hour"].apply(
                     format_for_float_currency)
                 budget_data_2025_pivot["Turn"] = budget_data_2025_pivot["Turn"].apply(format_for_float)
+                budget_data_2025_pivot["Rev - Storage & Blast"] = budget_data_2025_pivot["Rev - Storage & Blast"].apply(
+                    format_for_percentage)
+                budget_data_2025_pivot["Rev - Services"] = budget_data_2025_pivot["Rev - Services"].apply(
+                    format_for_percentage)
 
                 budget_data_2025_pivot = budget_data_2025_pivot.T
 
@@ -453,18 +466,26 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
         treemap_data = select_CC_data.filter(
             ['Name', " Revenue", 'EBITDA $', 'EBITDA Margin\n%', 'EBITDA per Pallet', 'Revenue per Pallet',
              'Pallet', 'TTP p.w.', 'Rank', 'Turn', "DLH% \n(DL / Service Rev)", "LTR % (Labour to Rev %)", 'Rev psqm',
-             'EBITDA psqm', 'sqm', 'Rent psqm'
+             'EBITDA psqm', 'sqm', 'Rent psqm', 'Storage Revenue, $', 'Blast Freezing Revenue, $'
              ])
 
         display_data = treemap_data
         size = len(display_data)
-        display_data = display_data.query(f"Rank > {size - 10} ")
+        # display_data = display_data.query(f"Rank > {size - 10} ")
         display_data_pie = display_data
         rank_display_data = display_data
         score_carding_data = display_data
+        display_data["Rev - Storage & Blast"] = (display_data['Storage Revenue, $'] + display_data[
+            'Blast Freezing Revenue, $']) / display_data[" Revenue"]
+        display_data["Rev - Services"] = 1 - display_data["Rev - Storage & Blast"]
+        display_data.rename(columns={"DLH% \n(DL / Service Rev)": "DL ratio", "LTR % (Labour to Rev %)": "LTR - %"},
+                            inplace=True)
 
+        treemap_graph_data = display_data
         display_data = display_data.style.hide(axis="index")
-        display_data = display_data.hide(['Rank', 'sqm'], axis="columns")
+
+        display_data = display_data.hide(['Rank', 'sqm', 'Storage Revenue, $', 'Blast Freezing Revenue, $'],
+                                         axis="columns")
 
         display_data = style_dataframe(display_data)
 
@@ -476,12 +497,15 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
             'EBITDA per Pallet': "${0:,.2f}",
             'Pallet': "{0:,.0f}",
             'TTP p.w.': '{0:,.0f}',
-            "DLH% \n(DL / Service Rev)": "{0:,.2%}",
-            "LTR % (Labour to Rev %)": "{0:,.2%}",
+            "DL ratio": "{0:,.2%}",
+            "LTR - %": "{0:,.2%}",
             'Rev psqm': "${0:,.2f}",
             'EBITDA psqm': "${0:,.2f}",
             'Rent psqm': "${0:,.2f}",
             'Turn': "{0:,.2f}",
+            'Rev - Storage & Blast': "{0:,.2%}",
+            'Rev - Services': "{0:,.2%}",
+
         })
 
         display_data = display_data.map(highlight_negative_values)
@@ -508,6 +532,212 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
         st.text("")
         st.text("")
 
+        with st.expander("Customer Invoicing Comparison - Raw SWMS Invoicing Data for 2024", expanded=False):
+
+            ############################### Side for Uploading excel File ###############################
+
+            all_workday_Customer_names = invoice_rates.WorkdayCustomer_Name.unique()
+
+            select_Option1, select_Option2 = st.columns(2)
+
+            with select_Option1:
+                sel1, sel2, sel3 = st.columns((3, 3, 1))
+
+                selected_cost_centre_sel1 = sel1.selectbox("Cost Centre :", cost_centres, index=0, key=544)
+                selected_workday_customers = invoice_rates[
+                    invoice_rates.Cost_Center == selected_cost_centre_sel1].sort_values(
+                    by="WorkdayCustomer_Name").WorkdayCustomer_Name.unique()
+                select_CC_data = invoice_rates[invoice_rates.Cost_Center == selected_cost_centre_sel1]
+
+                with sel2:
+                    if selected_cost_centre_sel1:
+                        select_customer = st.multiselect("Select Customer : ", selected_workday_customers,
+                                                         selected_workday_customers[0], key=552)
+                    else:
+                        select_customer = st.multiselect("Select Customer : ", all_workday_Customer_names,
+                                                         all_workday_Customer_names[0], key=554)
+
+                Workday_Sales_Item_Name = invoice_rates.Workday_Sales_Item_Name.unique()
+                selected_customer = select_CC_data[select_CC_data.WorkdayCustomer_Name.isin(select_customer)]
+
+                Revenue_Category = selected_customer.Revenue_Category.dropna().unique()
+
+                selected_customer_pivot = pd.pivot_table(selected_customer,
+                                                         values=["Quantity", "LineAmount"],
+                                                         index=["Revenue_Category", "Workday_Sales_Item_Name"],
+                                                         aggfunc="sum").reset_index()
+                selected_customer_pivot[
+                    "Avg Rate"] = selected_customer_pivot.LineAmount / selected_customer_pivot.Quantity
+
+                col1, col2 = st.columns((2, 0.1))
+
+                with col1:
+
+                    customer_avg_plts = selected_customer[selected_customer['Revenue_Category'] == 'Storage - Renewal'][
+                        "Quantity"].mean()
+                    pallets_handled_in = \
+                    selected_customer[selected_customer['Revenue_Category'] == 'Handling - Initial'][
+                        "Quantity"].sum()
+
+                    pallets_handled_out = selected_customer[selected_customer['Revenue_Category'] == 'Handling Out'][
+                        "Quantity"].sum()
+
+                    estimate_turn = ((pallets_handled_in + pallets_handled_in) / 2) / customer_avg_plts
+
+                    selected_customer_pivot_table = selected_customer_pivot.style.format({
+                        "LineAmount": "${0:,.2f}",
+                        "Quantity": "{0:,.0f}",
+                        "Avg Rate": "${0:,.2f}",
+                        "estimate_turn": "{0:,.1f}"
+                    })
+
+                    selected_customer_pivot_table = selected_customer_pivot_table.map(highlight_negative_values)
+
+                    selected_customer_pivot_table = style_dataframe((selected_customer_pivot_table))
+                    selected_customer_pivot_table = selected_customer_pivot_table.hide(axis="index")
+
+                    st.write(selected_customer_pivot_table.to_html(), unsafe_allow_html=True)
+
+                    # Convert DataFrame to Excel
+                    output891 = io.BytesIO()
+                    with pd.ExcelWriter(output891) as writer:
+                        selected_customer_pivot.to_excel(writer)
+
+                    # Create a download button
+                    st.download_button(
+                        label="Download Excel  ⤵️",
+                        data=output891,
+                        file_name='invoiced_data.xlsx',
+                        mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                        key=210
+                    )
+
+                skip1, skip2, skip3, skip4 = st.columns(4)
+
+                with skip1:
+                    st.metric(label=f" Customer Avg Recurring Storage", value=f"{customer_avg_plts:,.0f} Plts",
+                              delta=f"{estimate_turn:,.1f} : Estimate Turn",
+                              border=False)
+
+                with skip2:
+                    pallet_billed_services = ['Blast Freezing', 'Storage - Initial', 'Storage - Renewal']
+
+                    filtered_data = \
+                        selected_customer[selected_customer["Revenue_Category"].isin(pallet_billed_services)][
+                            "LineAmount"].sum()
+                    ancillary_data = selected_customer["LineAmount"].sum() - filtered_data
+
+                    filtered_data_contribution = filtered_data / (filtered_data + ancillary_data)
+
+                    st.metric(label="Rent & Storage & Blast", value=f"${filtered_data:,.0f} ",
+                              delta=f"{filtered_data_contribution:,.0%} : of Revenue", border=False)
+
+                with skip3:
+                    st.metric(label="Services", value=f"${ancillary_data:,.0f}",
+                              delta=f"{1 - filtered_data_contribution:,.0%} : of Revenue", border=False)
+            with select_Option2:
+
+                sel1b, sel2b, sel3b = st.columns((3, 3, 1))
+
+                selected_cost_centre_b = sel1b.selectbox("Cost Centre :", cost_centres, index=0, key=635)
+                selected_workday_customers_b = invoice_rates[
+                    invoice_rates.Cost_Center == selected_cost_centre_b].sort_values(
+                    by="WorkdayCustomer_Name").WorkdayCustomer_Name.unique()
+                select_CC_data_b = invoice_rates[invoice_rates.Cost_Center == selected_cost_centre_b]
+
+                with sel2b:
+                    if selected_cost_centre_b:
+                        select_customer_b = st.multiselect("Select Customer : ", selected_workday_customers_b,
+                                                           selected_workday_customers_b[0], key=642)
+                    else:
+                        select_customer_b = st.multiselect("Select Customer : ", all_workday_Customer_names,
+                                                           all_workday_Customer_names[0], key=644)
+
+                Workday_Sales_Item_Name_b = invoice_rates.Workday_Sales_Item_Name.unique()
+                selected_customer_b = select_CC_data_b[select_CC_data_b.WorkdayCustomer_Name.isin(select_customer_b)]
+
+                Revenue_Category_b = selected_customer_b.Revenue_Category.dropna().unique()
+
+                selected_customer_pivot_b = pd.pivot_table(selected_customer_b,
+                                                           values=["Quantity", "LineAmount"],
+                                                           index=["Revenue_Category", "Workday_Sales_Item_Name"],
+                                                           aggfunc="sum").reset_index()
+                selected_customer_pivot_b[
+                    "Avg Rate"] = selected_customer_pivot_b.LineAmount / selected_customer_pivot_b.Quantity
+
+                col1b, col2b = st.columns((2, 0.1))
+
+                with col1b:
+
+                    customer_avg_plts_b = \
+                        selected_customer_b[selected_customer_b['Revenue_Category'] == 'Storage - Renewal'][
+                            "Quantity"].mean()
+                    pallets_handled_in_b = \
+                    selected_customer_b[selected_customer_b['Revenue_Category'] == 'Handling - Initial'][
+                        "Quantity"].sum()
+
+                    pallets_handled_out_b = \
+                    selected_customer_b[selected_customer_b['Revenue_Category'] == 'Handling Out'][
+                        "Quantity"].sum()
+
+                    estimate_turn_b = ((pallets_handled_in_b + pallets_handled_in_b) / 2) / customer_avg_plts_b
+
+                    selected_customer_pivot_table_b = selected_customer_pivot_b.style.format({
+                        "LineAmount": "${0:,.2f}",
+                        "Quantity": "{0:,.0f}",
+                        "Avg Rate": "${0:,.2f}",
+                    })
+
+                    selected_customer_pivot_table_b = selected_customer_pivot_table_b.map(highlight_negative_values)
+
+                    selected_customer_pivot_table_b = style_dataframe((selected_customer_pivot_table_b))
+                    selected_customer_pivot_table_b = selected_customer_pivot_table_b.hide(axis="index")
+
+                    st.write(selected_customer_pivot_table_b.to_html(), unsafe_allow_html=True)
+
+                    # Convert DataFrame to Excel
+                    output681 = io.BytesIO()
+                    with pd.ExcelWriter(output681) as writer:
+                        selected_customer_pivot.to_excel(writer)
+
+                    # Create a download button
+                    st.download_button(
+                        label="Download Excel  ⤵️",
+                        data=output681,
+                        file_name='invoiced_data.xlsx',
+                        mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                        key=691
+                    )
+
+                skip1b, skip2b, skip3b, skip4b = st.columns(4)
+
+                with skip1b:
+                    # delta_value = (customer_avg_plts / site_avg_plts_occupied)/100
+                    # formartted_value = "{:.2%}".format(delta_value)
+                    st.metric(label=f" Customer Avg Recurring Storage", value=f"{customer_avg_plts_b:,.0f} Plts",
+                              delta=f"~{estimate_turn_b:,.1f}: Estimate Turn",
+                              border=False)
+
+                with skip2b:
+                    pallet_billed_services_b = ['Blast Freezing', 'Storage - Initial', 'Storage - Renewal']
+
+                    filtered_data_b = \
+                        selected_customer_b[selected_customer_b["Revenue_Category"].isin(pallet_billed_services_b)][
+                            "LineAmount"].sum()
+                    ancillary_data_b = selected_customer_b["LineAmount"].sum() - filtered_data_b
+
+                    filtered_data_contribution_b = filtered_data_b / (filtered_data_b + ancillary_data_b)
+
+                    st.metric(label="Rent & Storage & Blast", value=f"${filtered_data_b:,.0f} ",
+                              delta=f"{filtered_data_contribution_b:,.0%} : of Revenue", border=False)
+
+                with skip3b:
+                    st.metric(label="Services", value=f"${ancillary_data_b:,.0f}",
+                              delta=f"{1 - filtered_data_contribution_b:,.0%} : of Revenue", border=False)
+
+        st.text("")
+        st.text("")
+
         with st.expander("Select Customer to Benchmark", expanded=True):
             customer_list = rank_display_data.Name.unique()
             st.subheader("Customer KPIs vs Site")
@@ -523,8 +753,8 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
 
             site_benchmark_cc = selected_cost_centre.split(" AU")[0]
 
-            budget_data_2025_bench_mark = budget_data_2025_bench_mark.loc[budget_data_2025_bench_mark.index == site_benchmark_cc]
-
+            budget_data_2025_bench_mark = budget_data_2025_bench_mark.loc[
+                budget_data_2025_bench_mark.index == site_benchmark_cc]
 
             _a, b1, b2, b3, _b = st.columns((1, 3, 3, 3, 1))
 
@@ -634,7 +864,7 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
             with c1:
                 rank_display_data_benchmark["Site DL Per Pallet"] = budget_data_2025_bench_mark["DL %"].values
 
-                df = rank_display_data_benchmark[["DLH% \n(DL / Service Rev)", "Site DL Per Pallet"]]
+                df = rank_display_data_benchmark[["DL ratio", "Site DL Per Pallet"]]
                 df = df.T
                 fig = make_subplots(rows=2, cols=2, shared_yaxes=False, column_widths=[100, 100],
                                     row_heights=[250, 250],
@@ -642,9 +872,9 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
                                     )
 
                 fig.add_trace(
-                    go.Bar(x=df.loc["DLH% \n(DL / Service Rev)"], y=[f'{selected_customer}'], name="DL Ratio",
+                    go.Bar(x=df.loc["DL ratio"], y=[f'{selected_customer}'], name="DL Ratio",
                            orientation='h',
-                           text=df.loc["DLH% \n(DL / Service Rev)"].map(format_for_percentage),
+                           text=df.loc["DL ratio"].map(format_for_percentage),
                            textfont=dict(color='white'),
                            marker=dict(cornerradius=30), showlegend=False
                            ), 1, 1
@@ -666,7 +896,7 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
             with c2:
                 rank_display_data_benchmark["Site LTR"] = budget_data_2025_bench_mark["LTR %"].values
 
-                df = rank_display_data_benchmark[["LTR % (Labour to Rev %)", "Site LTR"]]
+                df = rank_display_data_benchmark[["LTR - %", "Site LTR"]]
                 df = df.T
                 fig = make_subplots(rows=2, cols=2, shared_yaxes=False, column_widths=[100, 100],
                                     row_heights=[250, 250],
@@ -674,8 +904,8 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
                                     )
 
                 fig.add_trace(
-                    go.Bar(x=df.loc["LTR % (Labour to Rev %)"], y=[f'{selected_customer}'], name="LTR", orientation='h',
-                           text=df.loc["LTR % (Labour to Rev %)"].map(format_for_percentage),
+                    go.Bar(x=df.loc["LTR - %"], y=[f'{selected_customer}'], name="LTR", orientation='h',
+                           text=df.loc["LTR - %"].map(format_for_percentage),
                            textfont=dict(color='white'),
                            marker=dict(cornerradius=30), showlegend=False
                            ), 1, 1
@@ -711,12 +941,18 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
                     
                     1. Identified KPIs and Their Weightings
                     First, identify the key performance indicators (KPIs) you want to use and assign a weight to each based on its importance. For example:
-                    -	Revenue Per Pallet:         {revenue_per_pallet_weighting}%
-                    -	EBITDA Per Pallet:          {ebitda_pallet_weighting}%
-                    -	Direct Labour Ratio:        {direct_labour_ratio_weighting}%
-                    -	Stock Turns:                {stock_turn_weighting}%
-                    -	Margin:                    {margin_weighting}%
-                    
+                    -	Revenue Per Pallet:...................{revenue_per_pallet_weighting}%
+                    -	EBITDA Per Pallet:.....................{ebitda_pallet_weighting}%
+                    -	Direct Labour Ratio:..................{direct_labour_ratio_weighting}%
+                    -	Stock Turns:..............................{stock_turn_weighting}%
+                    -	Margin:......................................{margin_weighting}%
+                    	
+                    Total Weighting :{revenue_per_pallet_weighting+
+                                                                 +ebitda_pallet_weighting + 
+                                                                 stock_turn_weighting + 
+                                                                 direct_labour_ratio_weighting+ 
+                                                                 margin_weighting}%
+                                        
                     2. Normalize KPIs - (Scaling) 
                     3. Calculate the Weighted Score
                     
@@ -746,7 +982,7 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
             with rank1:
 
                 rank_display_data["Stock Turn Times"] = (
-                            ((rank_display_data["TTP p.w."] / 2) * 52) / rank_display_data["Pallet"])
+                        ((rank_display_data["TTP p.w."] / 2) * 52) / rank_display_data["Pallet"])
                 rank_display_data["Rev Rank"] = rank_display_data[" Revenue"].rank(method='max', ascending=False)
                 rank_display_data["EBITDA"] = rank_display_data["EBITDA $"].rank(method='max', ascending=False)
                 rank_display_data["Margin %"] = rank_display_data["EBITDA Margin\n%"]
@@ -758,12 +994,6 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
                 rank_display_data["Pallets"] = rank_display_data["Pallet"].rank(method='max', ascending=False)
                 rank_display_data["TTP"] = rank_display_data["TTP p.w."].rank(method='max', ascending=False)
 
-
-                # rank_display_data["Score"] = ((+ rank_display_data["EBITDA"] \
-                #                                + rank_display_data["Margin %"] + rank_display_data["Rev | Pallet"] \
-                #                                + rank_display_data["EBITDA | Plt"] + rank_display_data["Turns"] \
-                #                                + rank_display_data["Pallets"] + rank_display_data["TTP"]) / 7) / \
-                #                              rank_display_data["Rev Rank"]
 
                 def calculate_score_card(df):
 
@@ -778,9 +1008,9 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
                     ebitda_score_max = df["EBITDA per Pallet"].max()
                     normalised_ebitda_score = (ebitda_score - ebitda_score_min) / (ebitda_score_max - ebitda_score_min)
 
-                    dl_ratio_score = df["DLH% \n(DL / Service Rev)"]
+                    dl_ratio_score = df["LTR - %"]
                     dl_ratio_score_min = 0
-                    dl_ratio_score_max = df["DLH% \n(DL / Service Rev)"].max()
+                    dl_ratio_score_max = df["LTR - %"].max()
                     normalised_dl_ratio_score = (dl_ratio_score - dl_ratio_score_min
                                                  ) / (dl_ratio_score_max - dl_ratio_score_min)
 
@@ -850,16 +1080,16 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
                 rank_display_data["Comment"] = (rank_display_data["Score Card"].apply(add_comment))
 
                 columns_to_hide = [" Revenue", 'EBITDA $', 'EBITDA Margin\n%', 'EBITDA per Pallet',
-                                   'Revenue per Pallet', 'sqm', 'Rent psqm'
+                                   'Revenue per Pallet', 'sqm', 'Rent psqm', 'Storage Revenue, $', 'Blast Freezing Revenue, $',
                                                                 'Pallet', 'TTP p.w.', 'Stock Turn Times']
 
                 rank_display_data = rank_display_data.style.hide(axis="index")
-                rank_display_data = rank_display_data.hide([" Revenue", 'EBITDA $', 'EBITDA Margin\n%',
-                                                            'EBITDA per Pallet', 'Revenue per Pallet', 'Pallet',
+                rank_display_data = rank_display_data.hide([" Revenue", 'EBITDA $', 'EBITDA Margin\n%','Storage Revenue, $', 'Blast Freezing Revenue, $',
+                                                            'EBITDA per Pallet', 'Revenue per Pallet', 'Pallet',"Rev - Storage & Blast", "Rev - Services",
                                                             'TTP p.w.', 'sqm', 'Rent psqm', 'Stock Turn Times',
                                                             "Rev psqm", "EBITDA psqm"
-                                                               , 'Rank', "DLH% \n(DL / Service Rev)",
-                                                            "LTR % (Labour to Rev %)"], axis="columns")
+                                                               , 'Rank', "DL ratio",
+                                                            "LTR - %"], axis="columns")
 
                 rank_display_data = rank_display_data.format({
                     "Rev Rank": '{0:,.0f}',
@@ -900,53 +1130,61 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
 
         st.divider()
 
-        st.subheader(f'Revenue vs Profitability Contribution - Analysis : {selected_cost_centre}', divider='rainbow')
+        with st.expander("Revenue vs Profitability Contribution - Analysis "):
 
-        graph1, graph2 = st.columns(2)
 
-        customers = treemap_data['Name']
-        # sales = [" Revenue", 'EBITDA $', 'EBITDA Margin\n%', 'Revenue per Pallet', 'EBITDA per Pallet', 'Pallet',
-        #          'TTP p.w.']
-        color_columns = [" Revenue", 'EBITDA $', 'EBITDA Margin\n%', 'Revenue per Pallet', 'EBITDA per Pallet',
-                         'Pallet',
-                         'TTP p.w.']
-        remark = select_CC_data['EBITDA Margin\n%']  # Replace with EBITDA per Pallet Through Put
-        margin = select_CC_data['EBITDA Margin\n%']  # Replace with EBITDA per Pallet Through Put
+            st.subheader(f'Revenue vs Profitability Contribution - Analysis : {selected_cost_centre}', divider='rainbow')
 
-        with graph1:
-            graph1_size, graph1_color, space_holder_3, space_holder_4 = st.columns(4)
+            graph1, graph2 = st.columns(2)
 
-            box_size_view = graph1_size.selectbox("Select Option for Box Size:", color_columns, key=111, index=0)
-            box_color_view = graph1_color.selectbox("Select Option for Box Color:", color_columns, key=112, index=3)
+            customers = treemap_graph_data['Name']
 
-            # Plotting HEAT MAP - tow Show Revenue and Profitability ############################
+            color_columns = [" Revenue", 'EBITDA $',
+                             'EBITDA Margin\n%',
+                             'Revenue per Pallet', 'EBITDA per Pallet',
+                             'Pallet',
+                             'TTP p.w.']
+            # remark = select_CC_data['EBITDA Margin\n%']  # Replace with EBITDA per Pallet Through Put
+            # margin = select_CC_data['EBITDA Margin\n%']  # Replace with EBITDA per Pallet Through Put
 
-            fig = px.treemap(select_CC_data,
-                             path=[customers],
-                             values=select_CC_data[box_size_view],
-                             color=select_CC_data[box_color_view],
-                             color_continuous_midpoint=select_CC_data[box_color_view].mean(),
-                             # color_continuous_scale='RdYlGn',
-                             )
+            with graph1:
+                graph1_size, graph1_color, space_holder_3, space_holder_4 = st.columns(4)
 
-            st.plotly_chart(fig, filename='Chart.html')
+                box_size_view = graph1_size.selectbox("Select Option for Box Size:", color_columns, key=1142, index=0)
+                box_color_view = graph1_color.selectbox("Select Option for Box Color:", color_columns, key=1143, index=3)
 
-        with graph2:
-            treemap_data = treemap_data.filter(['Name', " Revenue", 'EBITDA $', 'EBITDA Margin\n%',
-                                                'Revenue per Pallet', 'EBITDA per Pallet', 'Pallet',
-                                                'TTP p.w.'])
-            with st.expander("Filter Customer to Display"):
-                st.data_editor(treemap_data, num_rows='dynamic')
+                # Plotting HEAT MAP - tow Show Revenue and Profitability ############################
 
-            treemap_data = treemap_data[(treemap_data[box_size_view] > 1) & (treemap_data[box_color_view] > 1)]
-            x_value = str(box_size_view)
-            y_value = str(box_color_view)
+                fig = px.treemap(treemap_graph_data,
+                                 path=[customers],
+                                 values=treemap_graph_data[box_size_view],
+                                 color=treemap_graph_data[box_color_view],
+                                 # color_continuous_scale=['#074F69', '#0C769E', '#61CBF3','#94DCF8',"#CAEDFB"]
+                                 color_continuous_scale='RdYlGn'
 
-            fig = px.scatter(treemap_data, x=y_value,
-                             y=x_value,
-                             size=y_value, color="Name",
-                             hover_name="Name", log_x=False, size_max=60)
-            st.plotly_chart(fig)
+                                 )
+
+                # fig.update_traces(root_color="red",)
+
+                st.plotly_chart(fig, filename='Chart.html')
+
+            with graph2:
+                treemap_graph_data = treemap_graph_data.filter(['Name', " Revenue", 'EBITDA $', 'EBITDA Margin\n%',
+                                                                'Revenue per Pallet', 'EBITDA per Pallet', 'Pallet',
+                                                                'TTP p.w.'])
+                # with st.expander("Filter Customer to Display"):
+                #     st.data_editor(treemap_graph_data, num_rows='dynamic')
+
+                treemap_graph_data = treemap_graph_data[
+                    (treemap_graph_data[box_size_view] > 1) & (treemap_graph_data[box_color_view] > 1)]
+                x_value = str(box_size_view)
+                y_value = str(box_color_view)
+
+                fig = px.scatter(treemap_graph_data, x=y_value,
+                                 y=x_value,
+                                 size=y_value, color="Name",
+                                 hover_name="Name", log_x=False, size_max=60)
+                st.plotly_chart(fig)
 
         st.divider()
 
@@ -1335,17 +1573,17 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
             st.write(selected_customer_pivot_table.to_html(), unsafe_allow_html=True)
 
             # Convert DataFrame to Excel
-            output891 = io.BytesIO()
-            with pd.ExcelWriter(output891) as writer:
+            output1567 = io.BytesIO()
+            with pd.ExcelWriter(output1567) as writer:
                 selected_customer_pivot.to_excel(writer)
 
             # Create a download button
             st.download_button(
                 label="Download Excel  ⤵️",
-                data=output891,
+                data=output1567,
                 file_name='invoiced_data.xlsx',
                 mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                key=210
+                key=1577
             )
 
             kpi1, kpi2, kpi3, = st.columns(3)
@@ -1358,7 +1596,7 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
                           border=True)
 
             with kpi2:
-                pallet_billed_services = [ 'Blast Freezing', 'Storage - Initial', 'Storage - Renewal']
+                pallet_billed_services = ['Blast Freezing', 'Storage - Initial', 'Storage - Renewal']
 
                 filtered_data = \
                     selected_customer[selected_customer["Revenue_Category"].isin(pallet_billed_services)][
@@ -1372,7 +1610,7 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
 
             with kpi3:
                 st.metric(label="Services", value=f"${ancillary_data:,.0f}",
-                          delta=f"{1-filtered_data_contribution:,.0%} : of Revenue", border=True)
+                          delta=f"{1 - filtered_data_contribution:,.0%} : of Revenue", border=True)
 
         with col2:
             try:
