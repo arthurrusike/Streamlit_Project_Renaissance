@@ -449,6 +449,7 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
 
         s1, s2, s3, s4, s5 = st.columns(5)
 
+
         with s1:
             # s1_a, s1_b = st.columns(2)
             selected_cost_centre = st.selectbox("Select Cost Centre :", cost_centres, index=0, )
@@ -471,7 +472,8 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
 
         display_data = treemap_data
         size = len(display_data)
-        # display_data = display_data.query(f"Rank > {size - 10} ")
+        customer_view_size = s2.number_input("Filter Bottom Outlier Customers",value=size)
+        display_data = display_data.query(f"Rank > {size - customer_view_size} ")
         display_data_pie = display_data
         rank_display_data = display_data
         score_carding_data = display_data
@@ -511,6 +513,8 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
         display_data = display_data.map(highlight_negative_values)
         display_data.background_gradient(subset=['EBITDA Margin\n%'], cmap="RdYlGn")
 
+
+
         # Create a download button
         with s3:
             output1 = io.BytesIO()
@@ -523,7 +527,7 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
                 data=output1,
                 file_name='customer_revenue.xlsx',
                 mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                key=295,
+                key=530,
             )
 
         st.write(display_data.to_html(), unsafe_allow_html=True, use_container_width=True)
@@ -599,17 +603,17 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
                     st.write(selected_customer_pivot_table.to_html(), unsafe_allow_html=True)
 
                     # Convert DataFrame to Excel
-                    output891 = io.BytesIO()
-                    with pd.ExcelWriter(output891) as writer:
+                    output606 = io.BytesIO()
+                    with pd.ExcelWriter(output606) as writer:
                         selected_customer_pivot.to_excel(writer)
 
                     # Create a download button
                     st.download_button(
                         label="Download Excel  ⤵️",
-                        data=output891,
+                        data=output606,
                         file_name='invoiced_data.xlsx',
                         mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                        key=210
+                        key=616
                     )
 
                 skip1, skip2, skip3, skip4 = st.columns(4)
@@ -1125,7 +1129,7 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
                     data=output1a,
                     file_name='customer_revenue.xlsx',
                     mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                    key=367,
+                    key=1132,
                 )
 
         st.divider()
@@ -2000,7 +2004,7 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
                 data=output1305,
                 file_name='customer_revenue.xlsx',
                 mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                key=211,
+                key=2007,
             )
         except Exception as e:
             st.markdown(
