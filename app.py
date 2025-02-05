@@ -180,8 +180,8 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
                     st.text("")
                     t1.markdown("##### Years")
                     _2025 = t1.checkbox('2025', True)
-                    _2024 = t1.checkbox('2024')
-                    _2023 = t1.checkbox('2023')
+                    _2024 = t1.checkbox('2024', True)
+                    _2023 = t1.checkbox('2023', True)
 
                     if _2025:
                         selected_years.append(2025)
