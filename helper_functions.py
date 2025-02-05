@@ -3,7 +3,8 @@ import pandas as pd
 
 
 def style_dataframe(df):
-    return (df.set_table_styles(
+    return (
+        df.set_table_styles(
         [{
             'selector': 'th',
             'props': [
@@ -80,7 +81,7 @@ def sub_category_classification(dtframe):
 
 @st.cache_data
 def load_profitbility_Summary_model(uploaded_file):
-    customer_profitability_summary = pd.read_excel(uploaded_file, sheet_name="ChartData", header=5, usecols="B:BJ")
+    customer_profitability_summary = pd.read_excel(uploaded_file, sheet_name="ChartData", header=5, usecols="B:BM")
     customer_profitability_summary = customer_profitability_summary[customer_profitability_summary[" Revenue"] > 0]
     # invoice_rates["Calumo Description"] = invoice_rates.apply(sub_category_classification, axis=1)
     # invoice_rates['formatted_date'] = pd.to_datetime(invoice_rates['InvoiceDate'])
