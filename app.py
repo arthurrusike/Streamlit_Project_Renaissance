@@ -163,7 +163,7 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
             profitability_2023.Site.isin(selected_site)]
         select_Site_data_2023_pallets = customer_pallets[customer_pallets.Site.isin(selected_site)]
 
-        with st.expander("Full Years Comparison - GAAP (USD Translation) ", expanded=True):
+        with st.expander("Full Years Comparison - GAAP (USD) ", expanded=True):
 
             section1, section2, section3 = st.columns((
                                                                    len(selected_site) * 0.20,
@@ -291,7 +291,7 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
 
             budget_data_2025_pivot = budget_data_2025_pivot.style.set_table_styles(styles)
 
-            section2.markdown("##### Site Financial Summary")
+            section2.markdown("##### Site Financial Summary - USD")
 
             section2.write(budget_data_2025_pivot.to_html(), unsafe_allow_html=True)
 
