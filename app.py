@@ -147,7 +147,7 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
         space_holder_1, title_holder, cost_centres_selection, space_holder3 = st.columns(4)
 
         title_holder.subheader("Project Renaissance", divider="blue")
-        selected_site = cost_centres_selection.multiselect("Site :", site_list, site_list[2])
+        selected_site = cost_centres_selection.multiselect("Site :", site_list, site_list[0])
 
         # Cost Centre Names for Selection in Select Box
         cost_centres = profitability_summary_file[profitability_summary_file["Site"].isin(selected_site)]
