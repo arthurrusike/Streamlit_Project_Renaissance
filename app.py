@@ -481,14 +481,21 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
         key_metrics_data_pivot = key_metrics_data_pivot.reset_index("Name")
 
         key_metrics_data_pivot["Ebitda - %"] = key_metrics_data_pivot['EBITDA $'] / key_metrics_data_pivot[' Revenue']
+        key_metrics_data_pivot.insert(3, "Ebitdar - %", key_metrics_data_pivot['EBITDAR $'] / key_metrics_data_pivot[' Revenue'])
+
+
         key_metrics_data_pivot_Hume["Ebitda - %"] = key_metrics_data_pivot_Hume['EBITDA $'] / \
                                                     key_metrics_data_pivot_Hume[' Revenue']
+
+        key_metrics_data_pivot_Hume.insert(2,"Ebitdar - %", key_metrics_data_pivot_Hume['EBITDAR $'] / \
+                                           key_metrics_data_pivot_Hume[' Revenue']  )
 
         key_metrics_data_pivot = key_metrics_data_pivot.style.hide(axis="index")
 
         key_metrics_data_pivot = key_metrics_data_pivot.format({
             " Revenue": '${0:,.0f}',
             'EBITDAR $': "${0:,.0f}",
+            "Ebitdar - %": "{0:,.2%}",
             'Rent Expense,\n$': "${0:,.0f}",
             'EBITDA $': "${0:,.0f}",
             'Ebitda - %': "{0:,.2%}",
@@ -508,6 +515,7 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
         key_metrics_data_pivot_Hume = key_metrics_data_pivot_Hume.format({
             " Revenue": '${0:,.0f}',
             'EBITDAR $': "${0:,.0f}",
+            "Ebitdar - %": "{0:,.2%}",
             'Rent Expense,\n$': "${0:,.0f}",
             'EBITDA $': "${0:,.0f}",
             'Ebitda - %': "{0:,.2%}",
