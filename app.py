@@ -469,14 +469,14 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
                                                         'EBITDA $',
                                                         # 'Sqm Rent'
                                                         ],
-                                                aggfunc='sum', sort=False)
+                                                aggfunc='sum', sort=True)
 
         key_metrics_data_pivot_Hume = pd.pivot_table(key_metrics_data, index=["Site"],
                                                      values=[" Revenue", 'EBITDAR $', 'Rent Expense,\n$',
                                                              'EBITDA $',
                                                              # 'Sqm Rent'
                                                              ],
-                                                     aggfunc='sum', sort=False)
+                                                     aggfunc='sum', sort=True)
 
         key_metrics_data_pivot = key_metrics_data_pivot.reset_index("Name")
 
@@ -564,10 +564,9 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
         kpi_key_metrics_data_pivot = key_metrics_data[
             [   "Pallet",
                 "Capacity",
-            "Pallets", "Occ-%", "Rev | Plt","Rent | Plt", "EBITDA | Plt", "Turn", "DL %", "LTR %", "Rev | SQM",
+            "Pallets", "Occ-%", "Rev | Plt","Rent | Plt", "EBITDA | Plt", "Turn", "DL %", "LTR %", "Rev | SQM","Rent | SQM",
              "EBITDA | SQM",
-             # "Rent | SQM"
-             # "Site Pal Cap psqm"
+
              ]]
 
         kpi_key_metrics_data_pivot = pd.concat([kpi_key_metrics_data_pivot, test], axis=1, )
@@ -690,10 +689,17 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
             select_CC_data["Rank"] = select_CC_data[" Revenue"].rank(method='max')
             select_CC_data["Rev psqm"] = select_CC_data[" Revenue"] / select_CC_data["sqm"]
             treemap_data = select_CC_data.filter(
-                ['Name', " Revenue", 'EBITDA $', 'EBITDA Margin\n%', 'EBITDA per Pallet', 'Revenue per Pallet',
+                ['Name', " Revenue", 'EBITDAR $', 'EBITDAR Margin\n%' ,'EBITDA $', 'EBITDA Margin\n%','Revenue per Pallet', 'EBITDA per Pallet',
                  'Pallet', 'TTP p.w.', 'Rank', 'Turn', "DLH% \n(DL / Service Rev)", "LTR % (Labour to Rev %)", 'Rev psqm',
-                 'EBITDA psqm', 'sqm', 'Rent psqm', 'Storage Revenue, $', 'Blast Freezing Revenue, $'
+                 'EBITDA psqm', 'sqm', 'Rent psqm', 'Storage Revenue, $', 'Blast Freezing Revenue, $','RSB Rev per OHP',
+                 'Service Rev per TPP', 'Rent Expense,\n$'
                  ])
+
+            # treemap_data.rename(columns={'EBITDAR Margin\n%': 'EBITDAR %','EBITDA Margin\n%':'EBITDA %','EBITDA per Pallet':'EBITDA | Plt',
+            #                              'Revenue per Pallet': 'Rev | Plt','DLH% \n(DL / Service Rev)': 'DL Ratio' })
+
+
+            treemap_data.insert(7,"Rent | Plt", (treemap_data['Rent Expense,\n$'] / (treemap_data.Pallet * 52)))
 
             display_data = treemap_data
             size = len(display_data)
@@ -702,41 +708,49 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
             display_data_pie = display_data
             rank_display_data = display_data
             score_carding_data = display_data
-            display_data["Rev - Storage & Blast"] = (display_data['Storage Revenue, $'] + display_data[
+            display_data["RSB"] = (display_data['Storage Revenue, $'] + display_data[
                 'Blast Freezing Revenue, $']) / display_data[" Revenue"]
-            display_data["Rev - Services"] = 1 - display_data["Rev - Storage & Blast"]
-            display_data.rename(columns={"DLH% \n(DL / Service Rev)": "DL ratio", "LTR % (Labour to Rev %)": "LTR - %"},
-                                inplace=True)
+            display_data["Services"] = 1 - display_data["RSB"]
+            display_data.rename(columns={"DLH% \n(DL / Service Rev)": "DL ratio", "LTR % (Labour to Rev %)": "LTR - %",
+                                         'EBITDAR Margin\n%': 'EBITDAR %','EBITDA Margin\n%':'EBITDA %','EBITDA per Pallet':'EBITDA | Plt',
+                                         'Revenue per Pallet': 'Rev | Plt'}, inplace=True)
 
             treemap_graph_data = display_data
             display_data = display_data.style.hide(axis="index")
 
-            display_data = display_data.hide(['Rank', 'sqm', 'Storage Revenue, $', 'Blast Freezing Revenue, $'],
+            display_data = display_data.hide(['Rank', 'sqm', 'Storage Revenue, $', 'Blast Freezing Revenue, $','Rent psqm',
+                                              'Rent Expense,\n$',
+                                              ],
                                              axis="columns")
 
             display_data = style_dataframe(display_data)
 
             display_data = display_data.format({
                 " Revenue": '${0:,.0f}',
+                'EBITDAR $':"${0:,.0f}",
+                'EBITDAR %': "{0:,.2%}",
                 'EBITDA $': "${0:,.0f}",
-                'EBITDA Margin\n%': "{0:,.2%}",
-                'Revenue per Pallet': "${0:,.2f}",
-                'EBITDA per Pallet': "${0:,.2f}",
+                'EBITDA %': "{0:,.2%}",
+                'Rev | Plt': "${0:,.2f}",
+                'EBITDA | Plt': "${0:,.2f}",
                 'Pallet': "{0:,.0f}",
                 'TTP p.w.': '{0:,.0f}',
                 "DL ratio": "{0:,.2%}",
                 "LTR - %": "{0:,.2%}",
                 'Rev psqm': "${0:,.2f}",
                 'EBITDA psqm': "${0:,.2f}",
+                "Rent | Plt":"${0:,.2f}",
                 'Rent psqm': "${0:,.2f}",
                 'Turn': "{0:,.2f}",
-                'Rev - Storage & Blast': "{0:,.2%}",
-                'Rev - Services': "{0:,.2%}",
+                'RSB': "{0:,.2%}",
+                'Services': "{0:,.2%}",
+                'RSB Rev per OHP':"${0:,.2f}",
+                'Service Rev per TPP':"${0:,.2f}",
 
             })
 
             display_data = display_data.map(highlight_negative_values)
-            display_data.background_gradient(subset=['EBITDA Margin\n%'], cmap="RdYlGn")
+            display_data.background_gradient(subset=['EBITDA %'], cmap="RdYlGn")
 
             # Create a download button
             with s3:
@@ -988,7 +1002,7 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
             with b1:
                 rank_display_data_benchmark["Site Rev Per Pallet"] = budget_data_2025_bench_mark["Rev | Plt"].values
 
-                df = rank_display_data_benchmark[["Revenue per Pallet", "Site Rev Per Pallet"]]
+                df = rank_display_data_benchmark[["Rev | Plt", "Site Rev Per Pallet"]]
 
                 # st.dataframe(rank_display_data_benchmark)
 
@@ -999,9 +1013,9 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
                                     )
 
                 fig.add_trace(
-                    go.Bar(x=df.loc["Revenue per Pallet"], y=[f'{selected_customer}'], name="Rev | Pallet",
+                    go.Bar(x=df.loc["Rev | Plt"], y=[f'{selected_customer}'], name="Rev | Pallet",
                            orientation='h',
-                           text=df.loc["Revenue per Pallet"].map(format_for_float_currency),
+                           text=df.loc["Rev | Plt"].map(format_for_float_currency),
                            textfont=dict(color='white'),
                            marker=dict(cornerradius=30), showlegend=False
                            ), 1, 1
@@ -1025,7 +1039,7 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
                 rank_display_data_benchmark["Site Ebitda Per Pallet"] = budget_data_2025_bench_mark[
                     "EBITDA | Plt"].values
 
-                df = rank_display_data_benchmark[["EBITDA per Pallet", "Site Ebitda Per Pallet"]]
+                df = rank_display_data_benchmark[["EBITDA | Plt", "Site Ebitda Per Pallet"]]
                 df = df.T
                 fig = make_subplots(rows=2, cols=2, shared_yaxes=False, column_widths=[100, 100],
                                     row_heights=[250, 250],
@@ -1033,9 +1047,9 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
                                     )
 
                 fig.add_trace(
-                    go.Bar(x=df.loc["EBITDA per Pallet"], y=[f'{selected_customer}'], name="Ebitda Per Pallet",
+                    go.Bar(x=df.loc["EBITDA | Plt"], y=[f'{selected_customer}'], name="Ebitda Per Pallet",
                            orientation='h',
-                           text=df.loc["EBITDA per Pallet"].map(format_for_float_currency),
+                           text=df.loc["EBITDA | Plt"].map(format_for_float_currency),
                            textfont=dict(color='white'),
                            marker=dict(cornerradius=30), showlegend=False
                            ), 1, 1
@@ -1206,34 +1220,35 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
 
         with st.expander("Top 10 Customers - Activity Rank", expanded=True):
 
-            rank1, rank2 = st.columns((3, 0.1))
-            with rank1:
+            rank1, rank2, rank3 = st.columns((1,4,1))
+            with rank2:
 
                 rank_display_data["Stock Turn Times"] = (
                         ((rank_display_data["TTP p.w."] / 2) * 52) / rank_display_data["Pallet"])
-                rank_display_data["Rev Rank"] = rank_display_data[" Revenue"].rank(method='max', ascending=False)
-                rank_display_data["EBITDA"] = rank_display_data["EBITDA $"].rank(method='max', ascending=False)
-                rank_display_data["Margin %"] = rank_display_data["EBITDA Margin\n%"]
-                rank_display_data["Rev | Pallet"] = rank_display_data["Revenue per Pallet"].rank(method='max',
-                                                                                                 ascending=False)
-                rank_display_data["EBITDA | Plt"] = rank_display_data["EBITDA per Pallet"].rank(method='max',
-                                                                                                ascending=False)
-                rank_display_data["Turn"] = rank_display_data["Stock Turn Times"].rank(method='max', ascending=False)
+
+                rank_display_data.insert(1,"Rev Rank",rank_display_data[" Revenue"].rank(method='max', ascending=False))
+                rank_display_data.insert(2, "EBITDA", rank_display_data["EBITDA $"].rank(method='max', ascending=False))
+                rank_display_data.insert(3,"Rev | Pallet", rank_display_data["Rev | Plt"].rank(method='max', ascending=False))
+                rank_display_data["EBITDA | Plt"] = rank_display_data["EBITDA | Plt"].rank(method='max', ascending=False)
+
+                rank_display_data["Margin %"] = rank_display_data["EBITDA %"]
+
                 rank_display_data["Pallets"] = rank_display_data["Pallet"].rank(method='max', ascending=False)
                 rank_display_data["TTP"] = rank_display_data["TTP p.w."].rank(method='max', ascending=False)
+                rank_display_data["Turns"] = rank_display_data["Stock Turn Times"].rank(method='max', ascending=False)
 
 
                 def calculate_score_card(df):
 
-                    revenue_score = df["Revenue per Pallet"]
+                    revenue_score = df["Rev | Plt"]
                     revenue_score_min = 0
-                    revenue_score_max = df["Revenue per Pallet"].max()
+                    revenue_score_max = df["Rev | Plt"].max()
                     normalised_revenue_score = (revenue_score - revenue_score_min) / (
                             revenue_score_max - revenue_score_min)
 
-                    ebitda_score = df["EBITDA per Pallet"]
+                    ebitda_score = df["EBITDA | Plt"]
                     ebitda_score_min = 0
-                    ebitda_score_max = df["EBITDA per Pallet"].max()
+                    ebitda_score_max = df["EBITDA | Plt"].max()
                     normalised_ebitda_score = (ebitda_score - ebitda_score_min) / (ebitda_score_max - ebitda_score_min)
 
                     dl_ratio_score = df["LTR - %"]
@@ -1248,9 +1263,9 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
                     normalised_turn_score = (turn_score - turn_score_min
                                              ) / (turn_score_max - turn_score_min)
 
-                    margin_score = df['EBITDA Margin\n%']
+                    margin_score = df['EBITDA %']
                     margin_score_min = 0
-                    margin_score_max = df['EBITDA Margin\n%'].max()
+                    margin_score_max = df['EBITDA %'].max()
                     normalised_pallet_score = (margin_score - margin_score_min
                                                ) / (margin_score_max - margin_score_min)
 
@@ -1307,19 +1322,17 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
 
                 rank_display_data["Comment"] = (rank_display_data["Score Card"].apply(add_comment))
 
-                columns_to_hide = [" Revenue", 'EBITDA $', 'EBITDA Margin\n%', 'EBITDA per Pallet',
-                                   'Revenue per Pallet', 'sqm', 'Rent psqm', 'Storage Revenue, $',
-                                   'Blast Freezing Revenue, $',
-                                   'Pallet', 'TTP p.w.', 'Stock Turn Times']
+                # columns_to_hide = [" Revenue", 'EBITDAR $' , 'EBITDA $', 'EBITDA %',
+                #                    'Rev | Plt', 'sqm', 'Rent psqm', 'Storage Revenue, $',
+                #                    'Blast Freezing Revenue, $','EBITDAR %', 'Rent | Plt',
+                #                    'Pallet', 'TTP p.w.', 'Stock Turn Times', ]
 
                 rank_display_data = rank_display_data.style.hide(axis="index")
                 rank_display_data = rank_display_data.hide(
-                    [" Revenue", 'EBITDA $', 'EBITDA Margin\n%', 'Storage Revenue, $', 'Blast Freezing Revenue, $',
-                     'EBITDA per Pallet', 'Revenue per Pallet', 'Pallet', "Rev - Storage & Blast", "Rev - Services",
-                     'TTP p.w.', 'sqm', 'Rent psqm', 'Stock Turn Times',
-                     "Rev psqm", "EBITDA psqm"
-                        , 'Rank', "DL ratio",
-                     "LTR - %"], axis="columns")
+                    [" Revenue", 'EBITDA $', 'EBITDA %', 'Storage Revenue, $', 'Blast Freezing Revenue, $',
+                     'Rev | Plt', 'Pallet', "RSB", "Services",'EBITDAR $','Rent | Plt','EBITDAR %','Turn',
+                     'TTP p.w.', 'sqm', 'Rent psqm', 'Stock Turn Times', "Rev psqm", "EBITDA psqm", 'Rank', "DL ratio",
+                     "LTR - %",'RSB Rev per OHP','Service Rev per TPP', 'Rent Expense,\n$'  ], axis="columns")
 
                 rank_display_data = rank_display_data.format({
                     "Rev Rank": '{0:,.0f}',
@@ -1327,7 +1340,7 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
                     "Margin %": '{0:,.2%}',
                     "Rev | Pallet": '{0:,.0f}',
                     "EBITDA | Plt": '{0:,.0f}',
-                    'Turn': '{0:,.0f}',
+                    'Turns': '{0:,.0f}',
                     "Pallets": '{0:,.0f}',
                     "TTP": '{0:,.0f}',
                     "Score": '{0:,.2f}',
@@ -1340,7 +1353,7 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
                 rank_display_data = style_dataframe(rank_display_data)
                 rank_display_data = rank_display_data.map(highlight_negative_values)
 
-                rank1.write(rank_display_data.to_html(), unsafe_allow_html=True, use_container_width=True)
+                rank2.write(rank_display_data.to_html(), unsafe_allow_html=True, use_container_width=True)
 
                 output1a = io.BytesIO()
                 with pd.ExcelWriter(output1a) as writer:
@@ -1370,8 +1383,8 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
             customers = treemap_graph_data['Name']
 
             color_columns = [" Revenue", 'EBITDA $',
-                             'EBITDA Margin\n%',
-                             'Revenue per Pallet', 'EBITDA per Pallet',
+                             'EBITDA %',
+                             'Rev | Plt', 'EBITDA | Plt',
                              'Pallet',
                              'TTP p.w.']
             # remark = select_CC_data['EBITDA Margin\n%']  # Replace with EBITDA per Pallet Through Put
@@ -1400,8 +1413,8 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
                 st.plotly_chart(fig, filename='Chart.html')
 
             with graph2:
-                treemap_graph_data = treemap_graph_data.filter(['Name', " Revenue", 'EBITDA $', 'EBITDA Margin\n%',
-                                                                'Revenue per Pallet', 'EBITDA per Pallet', 'Pallet',
+                treemap_graph_data = treemap_graph_data.filter(['Name', " Revenue", 'EBITDA $', 'EBITDA %',
+                                                                'Rev | Plt', 'EBITDA | Plt', 'Pallet',
                                                                 'TTP p.w.'])
                 # with st.expander("Filter Customer to Display"):
                 #     st.data_editor(treemap_graph_data, num_rows='dynamic')
