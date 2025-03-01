@@ -106,7 +106,7 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
     customer_pallets["Site"] = customer_pallets["Cost Center"].apply(extract_site)
 
     # Read individual Excel sheet separately = Customer Volumes current year and prior year. Use for comparison.
-    customer_rate_cards = load_specific_xls_sheet(customer_rates_file, "2025_Rate_Cards", 0, "A:I")
+    customer_rate_cards = load_specific_xls_sheet(customer_rates_file, "2025_Rate_Cards", 0, "A:J")
 
     # Read individual Excel sheet separately = Customer Volumes current year and prior year. Use for comparison.
     dominic_report = load_specific_xls_sheet(customer_rates_file, "dominic_report", 0, "A:AM")
@@ -668,110 +668,227 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
 
         with st.expander("Top Customers Review"):
 
-            st.subheader("Top Customers", divider='rainbow')
+            profitability_by_Customer, customer_network_profitability =  st.tabs(["📊 Top Site Customers",
+                                                                                  "🥇 Multi-Site Customer Profitability View",
+                                                                                  ])
 
-            st.text("")
-
-            s1, s2, s3, s4, s5 = st.columns(5)
-
-            with s1:
-                # s1_a, s1_b = st.columns(2)
-                selected_cost_centre = st.selectbox("Select Cost Centre :", cost_centres, index=0, )
-
-            selected_CC = selected_cost_centre[:9]
-            select_CC_data = profitability_summary_file[profitability_summary_file["CC"] == selected_CC]
-            select_CC_data_2023_profitability = profitability_2023[
-                profitability_2023["CC"] == selected_CC]
-            select_CC_data_2023_pallets = customer_pallets[customer_pallets["CC"] == selected_CC]
-
-            select_CC_data = select_CC_data.query("Customer != '.All Other [.All Other]'")
-            select_CC_data = select_CC_data.query("Pallet > 1")
-            select_CC_data["Rank"] = select_CC_data[" Revenue"].rank(method='max')
-            select_CC_data["Rev psqm"] = select_CC_data[" Revenue"] / select_CC_data["sqm"]
-            treemap_data = select_CC_data.filter(
-                ['Name', " Revenue", 'EBITDAR $', 'EBITDAR Margin\n%' ,'EBITDA $', 'EBITDA Margin\n%','Revenue per Pallet', 'EBITDA per Pallet',
-                 'Pallet', 'TTP p.w.', 'Rank', 'Turn', "DLH% \n(DL / Service Rev)", "LTR % (Labour to Rev %)", 'Rev psqm',
-                 'EBITDA psqm', 'sqm', 'Rent psqm', 'Storage Revenue, $', 'Blast Freezing Revenue, $','RSB Rev per OHP',
-                 'Service Rev per TPP', 'Rent Expense,\n$'
-                 ])
-
-            # treemap_data.rename(columns={'EBITDAR Margin\n%': 'EBITDAR %','EBITDA Margin\n%':'EBITDA %','EBITDA per Pallet':'EBITDA | Plt',
-            #                              'Revenue per Pallet': 'Rev | Plt','DLH% \n(DL / Service Rev)': 'DL Ratio' })
-
-
-            treemap_data.insert(7,"Rent | Plt", (treemap_data['Rent Expense,\n$'] / (treemap_data.Pallet * 52)))
-
-            display_data = treemap_data
-            size = len(display_data)
-            customer_view_size = s2.number_input("Filter Bottom Outlier Customers", value=size)
-            display_data = display_data.query(f"Rank > {size - customer_view_size} ")
-            display_data_pie = display_data
-            rank_display_data = display_data
-            score_carding_data = display_data
-            display_data["RSB"] = (display_data['Storage Revenue, $'] + display_data[
-                'Blast Freezing Revenue, $']) / display_data[" Revenue"]
-            display_data["Services"] = 1 - display_data["RSB"]
-            display_data.rename(columns={"DLH% \n(DL / Service Rev)": "DL ratio", "LTR % (Labour to Rev %)": "LTR - %",
-                                         'EBITDAR Margin\n%': 'EBITDAR %','EBITDA Margin\n%':'EBITDA %','EBITDA per Pallet':'EBITDA | Plt',
-                                         'Revenue per Pallet': 'Rev | Plt'}, inplace=True)
-
-            treemap_graph_data = display_data
-            display_data = display_data.style.hide(axis="index")
-
-            display_data = display_data.hide(['Rank', 'sqm', 'Storage Revenue, $', 'Blast Freezing Revenue, $','Rent psqm',
-                                              'Rent Expense,\n$',
-                                              ],
-                                             axis="columns")
-
-            display_data = style_dataframe(display_data)
-
-            display_data = display_data.format({
-                " Revenue": '${0:,.0f}',
-                'EBITDAR $':"${0:,.0f}",
-                'EBITDAR %': "{0:,.2%}",
-                'EBITDA $': "${0:,.0f}",
-                'EBITDA %': "{0:,.2%}",
-                'Rev | Plt': "${0:,.2f}",
-                'EBITDA | Plt': "${0:,.2f}",
-                'Pallet': "{0:,.0f}",
-                'TTP p.w.': '{0:,.0f}',
-                "DL ratio": "{0:,.2%}",
-                "LTR - %": "{0:,.2%}",
-                'Rev psqm': "${0:,.2f}",
-                'EBITDA psqm': "${0:,.2f}",
-                "Rent | Plt":"${0:,.2f}",
-                'Rent psqm': "${0:,.2f}",
-                'Turn': "{0:,.2f}",
-                'RSB': "{0:,.2%}",
-                'Services': "{0:,.2%}",
-                'RSB Rev per OHP':"${0:,.2f}",
-                'Service Rev per TPP':"${0:,.2f}",
-
-            })
-
-            display_data = display_data.map(highlight_negative_values)
-            display_data.background_gradient(subset=['EBITDA %'], cmap="RdYlGn")
-
-            # Create a download button
-            with s3:
-                output1 = io.BytesIO()
-                with pd.ExcelWriter(output1) as writer:
-                    display_data.to_excel(writer, sheet_name='export_data', index=False)
+            with(profitability_by_Customer):
+                st.subheader("Top Customers", divider='rainbow')
 
                 st.text("")
-                s3.download_button(
-                    label="👆 Download ⤵️",
-                    data=output1,
-                    file_name='customer_revenue.xlsx',
-                    mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                    key=530,
-                )
 
-            st.write(display_data.to_html(), unsafe_allow_html=True, use_container_width=True)
+                s1, s2, s3, s4, s5 = st.columns(5)
 
-            st.text("")
-            st.text("")
-            st.text("")
+                with s1:
+                    # s1_a, s1_b = st.columns(2)
+                    selected_cost_centre = st.selectbox("Select Cost Centre :", cost_centres, index=0, )
+
+                selected_CC = selected_cost_centre[:9]
+                select_CC_data = profitability_summary_file[profitability_summary_file["CC"] == selected_CC]
+                select_CC_data_2023_profitability = profitability_2023[
+                    profitability_2023["CC"] == selected_CC]
+                select_CC_data_2023_pallets = customer_pallets[customer_pallets["CC"] == selected_CC]
+
+                select_CC_data = select_CC_data.query("Customer != '.All Other [.All Other]'")
+                select_CC_data = select_CC_data.query("Pallet > 1")
+                select_CC_data["Rank"] = select_CC_data[" Revenue"].rank(method='max')
+                select_CC_data["Rev psqm"] = select_CC_data[" Revenue"] / select_CC_data["sqm"]
+                treemap_data = select_CC_data.filter(
+                    ['Name', " Revenue", 'EBITDAR $', 'EBITDAR Margin\n%' ,'EBITDA $', 'EBITDA Margin\n%','Revenue per Pallet', 'EBITDA per Pallet',
+                     'Pallet', 'TTP p.w.', 'Rank', 'Turn', "DLH% \n(DL / Service Rev)", "LTR % (Labour to Rev %)", 'Rev psqm',
+                     'EBITDA psqm', 'sqm', 'Rent psqm', 'Storage Revenue, $', 'Blast Freezing Revenue, $','RSB Rev per OHP',
+                     'Service Rev per TPP', 'Rent Expense,\n$'
+                     ])
+
+                # treemap_data.rename(columns={'EBITDAR Margin\n%': 'EBITDAR %','EBITDA Margin\n%':'EBITDA %','EBITDA per Pallet':'EBITDA | Plt',
+                #                              'Revenue per Pallet': 'Rev | Plt','DLH% \n(DL / Service Rev)': 'DL Ratio' })
+
+
+                treemap_data.insert(7,"Rent | Plt", (treemap_data['Rent Expense,\n$'] / (treemap_data.Pallet * 52)))
+
+                display_data = treemap_data
+                size = len(display_data)
+                customer_view_size = s2.number_input("Filter Bottom Outlier Customers", value=size)
+                display_data = display_data.query(f"Rank > {size - customer_view_size} ")
+                display_data_pie = display_data
+                rank_display_data = display_data
+                score_carding_data = display_data
+                display_data["RSB"] = (display_data['Storage Revenue, $'] + display_data[
+                    'Blast Freezing Revenue, $']) / display_data[" Revenue"]
+                display_data["Services"] = 1 - display_data["RSB"]
+                display_data.rename(columns={"DLH% \n(DL / Service Rev)": "DL ratio", "LTR % (Labour to Rev %)": "LTR - %",
+                                             'EBITDAR Margin\n%': 'EBITDAR %','EBITDA Margin\n%':'EBITDA %','EBITDA per Pallet':'EBITDA | Plt',
+                                             'Revenue per Pallet': 'Rev | Plt'}, inplace=True)
+
+                treemap_graph_data = display_data
+                display_data = display_data.style.hide(axis="index")
+
+                display_data = display_data.hide(['Rank', 'sqm', 'Storage Revenue, $', 'Blast Freezing Revenue, $','Rent psqm',
+                                                  'Rent Expense,\n$',
+                                                  ],
+                                                 axis="columns")
+
+                display_data = style_dataframe(display_data)
+
+                display_data = display_data.format({
+                    " Revenue": '${0:,.0f}',
+                    'EBITDAR $':"${0:,.0f}",
+                    'EBITDAR %': "{0:,.2%}",
+                    'EBITDA $': "${0:,.0f}",
+                    'EBITDA %': "{0:,.2%}",
+                    'Rev | Plt': "${0:,.2f}",
+                    'EBITDA | Plt': "${0:,.2f}",
+                    'Pallet': "{0:,.0f}",
+                    'TTP p.w.': '{0:,.0f}',
+                    "DL ratio": "{0:,.2%}",
+                    "LTR - %": "{0:,.2%}",
+                    'Rev psqm': "${0:,.2f}",
+                    'EBITDA psqm': "${0:,.2f}",
+                    "Rent | Plt":"${0:,.2f}",
+                    'Rent psqm': "${0:,.2f}",
+                    'Turn': "{0:,.2f}",
+                    'RSB': "{0:,.2%}",
+                    'Services': "{0:,.2%}",
+                    'RSB Rev per OHP':"${0:,.2f}",
+                    'Service Rev per TPP':"${0:,.2f}",
+
+                })
+
+                display_data = display_data.map(highlight_negative_values)
+                display_data.background_gradient(subset=['EBITDA %'], cmap="RdYlGn")
+
+                # Create a download button
+                with s3:
+                    output1 = io.BytesIO()
+                    with pd.ExcelWriter(output1) as writer:
+                        display_data.to_excel(writer, sheet_name='export_data', index=False)
+
+                    st.text("")
+                    s3.download_button(
+                        label="👆 Download ⤵️",
+                        data=output1,
+                        file_name='customer_revenue.xlsx',
+                        mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                        key=530,
+                    )
+
+                st.write(display_data.to_html(), unsafe_allow_html=True, use_container_width=True)
+
+                st.text("")
+                st.text("")
+                st.text("")
+
+            with(customer_network_profitability):
+                st.subheader("Multi-Site Customer Profitability", divider='rainbow')
+
+                st.text("")
+                st.text("")
+
+                s1, s2, s3 = st.columns(3)
+
+                with s1:
+                    profitability_summary_file = profitability_summary_file.query("Customer != '.All Other [.All Other]'")
+
+                    multi_site_customers = profitability_summary_file.sort_values(by="Name").Name.unique()
+                    default_customers = [multi_site_customers[8], multi_site_customers[27],multi_site_customers[28] ]
+
+                    select_network_customers = st.multiselect("Select Customers : ", multi_site_customers,
+                                                              default_customers, key=792)
+
+                select_network_data = profitability_summary_file[profitability_summary_file.Name.isin(select_network_customers)]
+
+                select_network_data = select_network_data.query("Pallet > 1")
+                select_network_data["Rank"] = select_network_data[" Revenue"].rank(method='max')
+                select_network_data["Rev psqm"] = select_network_data[" Revenue"] / select_network_data["sqm"]
+
+                treemap_network_data = select_network_data.filter(
+                    ['Name',"Site","Cost Center", " Revenue", 'EBITDAR $', 'EBITDAR Margin\n%' ,'EBITDA $', 'EBITDA Margin\n%','Revenue per Pallet', 'EBITDA per Pallet',
+                     'Pallet', 'TTP p.w.', 'Rank', 'Turn', "DLH% \n(DL / Service Rev)", "LTR % (Labour to Rev %)", 'Rev psqm',
+                     'EBITDA psqm', 'sqm', 'Rent psqm', 'Storage Revenue, $', 'Blast Freezing Revenue, $','RSB Rev per OHP',
+                     'Service Rev per TPP', 'Rent Expense,\n$','Avg. Storage Rate (Storage $/Pallet)','Avg. Handling Rate (Handling $/TTP)'
+                     ])
+                treemap_network_data["Cost Center"] = [ x.split(" - ")[1] +" - "+ x.split(" - ")[2] for x in  treemap_network_data["Cost Center"]   ]
+
+                treemap_network_data.insert(7,"Rent | Plt", (treemap_network_data['Rent Expense,\n$'] / (treemap_network_data.Pallet * 52)))
+                treemap_network_data = treemap_network_data.sort_values(by=" Revenue", ascending=False)
+
+                display_network_data = treemap_network_data
+                size = len(display_network_data)
+
+                network_customer_view_size = s2.number_input("Filter Bottom Outlier Customers", value=size)
+                display_network_data = display_network_data.query(f"Rank > {size - network_customer_view_size} ")
+
+
+
+                display_network_data["RSB"] = (display_network_data['Storage Revenue, $'] + display_network_data[
+                    'Blast Freezing Revenue, $']) / display_network_data[" Revenue"]
+                display_network_data["Services"] = 1 - display_network_data["RSB"]
+                display_network_data.rename(columns={"DLH% \n(DL / Service Rev)": "DL ratio", "LTR % (Labour to Rev %)": "LTR - %",
+                                             'EBITDAR Margin\n%': 'EBITDAR %','EBITDA Margin\n%':'EBITDA %','EBITDA per Pallet':'EBITDA | Plt',
+                                             'Revenue per Pallet': 'Rev | Plt', 'Avg. Storage Rate (Storage $/Pallet)':'Avg. Storage Rate' ,
+                                             'Avg. Handling Rate (Handling $/TTP)': 'Avg. Handling Rate'
+
+                                            }, inplace=True)
+
+                # treemap_graph_data = display_data
+                display_network_data = display_network_data.style.hide(axis="index")
+
+                display_network_data = display_network_data.hide(['Rank', 'sqm', 'Storage Revenue, $', 'Blast Freezing Revenue, $','Rent psqm',
+                                                  'Rent Expense,\n$', 'Rev psqm', 'EBITDA psqm','Avg. Storage Rate',
+                                                                  'Avg. Handling Rate'
+                                                  ],
+                                                 axis="columns")
+
+                display_network_data = style_dataframe(display_network_data)
+
+                display_network_data = display_network_data.format({
+                    " Revenue": '${0:,.0f}',
+                    'EBITDAR $':"${0:,.0f}",
+                    'EBITDAR %': "{0:,.2%}",
+                    'EBITDA $': "${0:,.0f}",
+                    'EBITDA %': "{0:,.2%}",
+                    'Rev | Plt': "${0:,.2f}",
+                    'EBITDA | Plt': "${0:,.2f}",
+                    'Pallet': "{0:,.0f}",
+                    'TTP p.w.': '{0:,.0f}',
+                    "DL ratio": "{0:,.2%}",
+                    "LTR - %": "{0:,.2%}",
+                    'Rev psqm': "${0:,.2f}",
+                    'EBITDA psqm': "${0:,.2f}",
+                    "Rent | Plt":"${0:,.2f}",
+                    'Rent psqm': "${0:,.2f}",
+                    'Turn': "{0:,.2f}",
+                    'RSB': "{0:,.2%}",
+                    'Services': "{0:,.2%}",
+                    'RSB Rev per OHP':"${0:,.2f}",
+                    'Service Rev per TPP':"${0:,.2f}",
+
+                })
+
+                display_network_data = display_network_data.map(highlight_negative_values)
+                display_network_data.background_gradient(subset=['EBITDA %'], cmap="RdYlGn")
+
+                # Create a download button
+                with s3:
+                    output863 = io.BytesIO()
+                    with pd.ExcelWriter(output863) as writer:
+                        display_network_data.to_excel(writer, sheet_name='export_data', index=False)
+
+                    st.text("")
+                    s3.download_button(
+                        label="👆 Download ⤵️",
+                        data=output863,
+                        file_name='customer_revenue.xlsx',
+                        mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                        key=877,
+                    )
+
+                st.write(display_network_data.to_html(), unsafe_allow_html=True, use_container_width=True)
+
+                st.text("")
+                st.text("")
+                st.text("")
+
 
         with st.expander("Customer Invoicing Comparison - Raw SWMS Invoicing Data for 2024", expanded=False):
 
