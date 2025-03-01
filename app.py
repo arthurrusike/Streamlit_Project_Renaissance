@@ -834,7 +834,7 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
                 display_network_data = display_network_data.style.hide(axis="index")
 
                 display_network_data = display_network_data.hide(['Rank', 'sqm', 'Storage Revenue, $', 'Blast Freezing Revenue, $','Rent psqm',
-                                                  'Rent Expense,\n$', 'Rev psqm', 'EBITDA psqm','Avg. Storage Rate',
+                                                  'Rent Expense,\n$', 'Rev psqm', 'EBITDA psqm','Avg. Storage Rate','Site',
                                                                   'Avg. Handling Rate'
                                                   ],
                                                  axis="columns")
