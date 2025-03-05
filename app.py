@@ -894,207 +894,374 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
 
             ############################### Side for Uploading excel File ###############################
 
+            invoice_vols_by_Customer, invoice_rates_by_service =  st.tabs(["📊 Customer Invoicing Detail",
+                                                                                  "🥇 Multi Customers Rates Per Service View",
+                                                                                  ])
+
             all_workday_Customer_names = invoice_rates.WorkdayCustomer_Name.unique()
 
-            select_Option1, select_Option2 = st.columns(2)
+            with(invoice_vols_by_Customer):
 
-            with select_Option1:
-                sel1, sel2, sel3 = st.columns((3, 3, 1))
+                select_Option1, select_Option2 = st.columns(2)
 
-                selected_cost_centre_sel1 = sel1.selectbox("Cost Centre :", cost_centres, index=0, key=544)
-                selected_workday_customers = invoice_rates[
-                    invoice_rates.Cost_Center == selected_cost_centre_sel1].sort_values(
-                    by="WorkdayCustomer_Name").WorkdayCustomer_Name.unique()
-                select_CC_data = invoice_rates[invoice_rates.Cost_Center == selected_cost_centre_sel1]
 
-                with sel2:
-                    if selected_cost_centre_sel1:
-                        select_customer = st.multiselect("Select Customer : ", selected_workday_customers,
-                                                         selected_workday_customers[0], key=552)
-                    else:
-                        select_customer = st.multiselect("Select Customer : ", all_workday_Customer_names,
-                                                         all_workday_Customer_names[0], key=554)
+                with select_Option1:
+                    sel1, sel2, sel3 = st.columns((3, 3, 1))
 
-                Workday_Sales_Item_Name = invoice_rates.Workday_Sales_Item_Name.unique()
-                selected_customer = select_CC_data[select_CC_data.WorkdayCustomer_Name.isin(select_customer)]
+                    selected_cost_centre_sel1 = sel1.selectbox("Cost Centre :", cost_centres, index=0, key=544)
+                    selected_workday_customers = invoice_rates[
+                        invoice_rates.Cost_Center == selected_cost_centre_sel1].sort_values(
+                        by="WorkdayCustomer_Name").WorkdayCustomer_Name.unique()
+                    select_CC_data = invoice_rates[invoice_rates.Cost_Center == selected_cost_centre_sel1]
 
-                Revenue_Category = selected_customer.Revenue_Category.dropna().unique()
+                    with sel2:
+                        if selected_cost_centre_sel1:
+                            select_customer = st.multiselect("Select Customer : ", selected_workday_customers,
+                                                             selected_workday_customers[0], key=552)
+                        else:
+                            select_customer = st.multiselect("Select Customer : ", all_workday_Customer_names,
+                                                             all_workday_Customer_names[0], key=554)
 
-                selected_customer_pivot = pd.pivot_table(selected_customer,
-                                                         values=["Quantity", "LineAmount"],
-                                                         index=["Revenue_Category", "Workday_Sales_Item_Name"],
-                                                         aggfunc="sum").reset_index()
-                selected_customer_pivot[
-                    "Avg Rate"] = selected_customer_pivot.LineAmount / selected_customer_pivot.Quantity
+                    Workday_Sales_Item_Name = invoice_rates.Workday_Sales_Item_Name.unique()
+                    selected_customer = select_CC_data[select_CC_data.WorkdayCustomer_Name.isin(select_customer)]
 
-                col1, col2 = st.columns((2, 0.1))
+                    Revenue_Category = selected_customer.Revenue_Category.dropna().unique()
 
-                with col1:
+                    selected_customer_pivot = pd.pivot_table(selected_customer,
+                                                             values=["Quantity", "LineAmount"],
+                                                             index=["Revenue_Category", "Workday_Sales_Item_Name",],
+                                                             aggfunc="sum").reset_index()
+                    selected_customer_pivot[
+                        "Avg Rate"] = selected_customer_pivot.LineAmount / selected_customer_pivot.Quantity
 
-                    customer_avg_plts = selected_customer[selected_customer['Revenue_Category'] == 'Storage - Renewal'][
-                        "Quantity"].mean()
-                    pallets_handled_in = \
-                        selected_customer[selected_customer['Revenue_Category'] == 'Handling - Initial'][
-                            "Quantity"].sum()
+                    col1, col2 = st.columns((2, 0.1))
 
-                    pallets_handled_out = selected_customer[selected_customer['Revenue_Category'] == 'Handling Out'][
-                        "Quantity"].sum()
+                    with col1:
 
-                    estimate_turn = ((pallets_handled_in + pallets_handled_in) / 2) / customer_avg_plts
-
-                    selected_customer_pivot_table = selected_customer_pivot.style.format({
-                        "LineAmount": "${0:,.2f}",
-                        "Quantity": "{0:,.0f}",
-                        "Avg Rate": "${0:,.2f}",
-                        "estimate_turn": "{0:,.1f}"
-                    })
-
-                    selected_customer_pivot_table = selected_customer_pivot_table.map(highlight_negative_values)
-
-                    selected_customer_pivot_table = style_dataframe((selected_customer_pivot_table))
-                    selected_customer_pivot_table = selected_customer_pivot_table.hide(axis="index")
-
-                    st.write(selected_customer_pivot_table.to_html(), unsafe_allow_html=True)
-
-                    # Convert DataFrame to Excel
-                    output606 = io.BytesIO()
-                    with pd.ExcelWriter(output606) as writer:
-                        selected_customer_pivot.to_excel(writer)
-
-                    # Create a download button
-                    st.download_button(
-                        label="Download Excel  ⤵️",
-                        data=output606,
-                        file_name='invoiced_data.xlsx',
-                        mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                        key=616
-                    )
-
-                skip1, skip2, skip3, skip4 = st.columns(4)
-
-                with skip1:
-                    st.metric(label=f" Customer Avg Recurring Storage", value=f"{customer_avg_plts:,.0f} Plts",
-                              delta=f"{estimate_turn:,.1f} : Estimate Turn",
-                              border=False)
-
-                with skip2:
-                    pallet_billed_services = ['Blast Freezing', 'Storage - Initial', 'Storage - Renewal']
-
-                    filtered_data = \
-                        selected_customer[selected_customer["Revenue_Category"].isin(pallet_billed_services)][
-                            "LineAmount"].sum()
-                    ancillary_data = selected_customer["LineAmount"].sum() - filtered_data
-
-                    filtered_data_contribution = filtered_data / (filtered_data + ancillary_data)
-
-                    st.metric(label="Rent & Storage & Blast", value=f"${filtered_data:,.0f} ",
-                              delta=f"{filtered_data_contribution:,.0%} : of Revenue", border=False)
-
-                with skip3:
-                    st.metric(label="Services", value=f"${ancillary_data:,.0f}",
-                              delta=f"{1 - filtered_data_contribution:,.0%} : of Revenue", border=False)
-            with select_Option2:
-
-                sel1b, sel2b, sel3b = st.columns((3, 3, 1))
-
-                selected_cost_centre_b = sel1b.selectbox("Cost Centre :", cost_centres, index=0, key=635)
-                selected_workday_customers_b = invoice_rates[
-                    invoice_rates.Cost_Center == selected_cost_centre_b].sort_values(
-                    by="WorkdayCustomer_Name").WorkdayCustomer_Name.unique()
-                select_CC_data_b = invoice_rates[invoice_rates.Cost_Center == selected_cost_centre_b]
-
-                with sel2b:
-                    if selected_cost_centre_b:
-                        select_customer_b = st.multiselect("Select Customer : ", selected_workday_customers_b,
-                                                           selected_workday_customers_b[0], key=642)
-                    else:
-                        select_customer_b = st.multiselect("Select Customer : ", all_workday_Customer_names,
-                                                           all_workday_Customer_names[0], key=644)
-
-                Workday_Sales_Item_Name_b = invoice_rates.Workday_Sales_Item_Name.unique()
-                selected_customer_b = select_CC_data_b[select_CC_data_b.WorkdayCustomer_Name.isin(select_customer_b)]
-
-                Revenue_Category_b = selected_customer_b.Revenue_Category.dropna().unique()
-
-                selected_customer_pivot_b = pd.pivot_table(selected_customer_b,
-                                                           values=["Quantity", "LineAmount"],
-                                                           index=["Revenue_Category", "Workday_Sales_Item_Name"],
-                                                           aggfunc="sum").reset_index()
-                selected_customer_pivot_b[
-                    "Avg Rate"] = selected_customer_pivot_b.LineAmount / selected_customer_pivot_b.Quantity
-
-                col1b, col2b = st.columns((2, 0.1))
-
-                with col1b:
-
-                    customer_avg_plts_b = \
-                        selected_customer_b[selected_customer_b['Revenue_Category'] == 'Storage - Renewal'][
+                        customer_avg_plts = selected_customer[selected_customer['Revenue_Category'] == 'Storage - Renewal'][
                             "Quantity"].mean()
-                    pallets_handled_in_b = \
-                        selected_customer_b[selected_customer_b['Revenue_Category'] == 'Handling - Initial'][
+                        pallets_handled_in = \
+                            selected_customer[selected_customer['Revenue_Category'] == 'Handling - Initial'][
+                                "Quantity"].sum()
+
+                        pallets_handled_out = selected_customer[selected_customer['Revenue_Category'] == 'Handling Out'][
                             "Quantity"].sum()
 
-                    pallets_handled_out_b = \
-                        selected_customer_b[selected_customer_b['Revenue_Category'] == 'Handling Out'][
+                        estimate_turn = ((pallets_handled_in + pallets_handled_in) / 2) / customer_avg_plts
+
+                        selected_customer_pivot_table = selected_customer_pivot.style.format({
+                            "LineAmount": "${0:,.2f}",
+                            "Quantity": "{0:,.0f}",
+                            "UnitPrice": "${0:,.2f}",
+                            "Avg Rate": "${0:,.2f}",
+                            "estimate_turn": "{0:,.1f}"
+                        })
+
+                        selected_customer_pivot_table = selected_customer_pivot_table.map(highlight_negative_values)
+
+                        selected_customer_pivot_table = style_dataframe((selected_customer_pivot_table))
+                        selected_customer_pivot_table = selected_customer_pivot_table.hide(axis="index")
+
+                        st.write(selected_customer_pivot_table.to_html(), unsafe_allow_html=True)
+
+                        # Convert DataFrame to Excel
+                        output606 = io.BytesIO()
+                        with pd.ExcelWriter(output606) as writer:
+                            selected_customer_pivot.to_excel(writer)
+
+                        # Create a download button
+                        st.download_button(
+                            label="Download Excel  ⤵️",
+                            data=output606,
+                            file_name='invoiced_data.xlsx',
+                            mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                            key=616
+                        )
+
+                    skip1, skip2, skip3, skip4 = st.columns(4)
+
+                    with skip1:
+                        st.metric(label=f" Customer Avg Recurring Storage", value=f"{customer_avg_plts:,.0f} Plts",
+                                  delta=f"{estimate_turn:,.1f} : Estimate Turn",
+                                  border=False)
+
+                    with skip2:
+                        pallet_billed_services = ['Blast Freezing', 'Storage - Initial', 'Storage - Renewal']
+
+                        filtered_data = \
+                            selected_customer[selected_customer["Revenue_Category"].isin(pallet_billed_services)][
+                                "LineAmount"].sum()
+                        ancillary_data = selected_customer["LineAmount"].sum() - filtered_data
+
+                        filtered_data_contribution = filtered_data / (filtered_data + ancillary_data)
+
+                        st.metric(label="Rent & Storage & Blast", value=f"${filtered_data:,.0f} ",
+                                  delta=f"{filtered_data_contribution:,.0%} : of Revenue", border=False)
+
+                    with skip3:
+                        st.metric(label="Services", value=f"${ancillary_data:,.0f}",
+                                  delta=f"{1 - filtered_data_contribution:,.0%} : of Revenue", border=False)
+                with select_Option2:
+
+                    sel1b, sel2b, sel3b  = st.columns((3, 3, 1))
+
+                    selected_cost_centre_b = sel1b.selectbox("Cost Centre :", cost_centres, index=0, key=635)
+                    selected_workday_customers_b = invoice_rates[
+                        invoice_rates.Cost_Center == selected_cost_centre_b].sort_values(
+                        by="WorkdayCustomer_Name").WorkdayCustomer_Name.unique()
+                    select_CC_data_b = invoice_rates[invoice_rates.Cost_Center == selected_cost_centre_b]
+
+                    with sel2b:
+                        if selected_cost_centre_b:
+                            select_customer_b = st.multiselect("Select Customer : ", selected_workday_customers_b,
+                                                               selected_workday_customers_b[0], key=642)
+                        else:
+                            select_customer_b = st.multiselect("Select Customer : ", all_workday_Customer_names,
+                                                               all_workday_Customer_names[0], key=644)
+
+                    Workday_Sales_Item_Name_b = invoice_rates.Workday_Sales_Item_Name.unique()
+                    selected_customer_b = select_CC_data_b[select_CC_data_b.WorkdayCustomer_Name.isin(select_customer_b)]
+
+                    Revenue_Category_b = selected_customer_b.Revenue_Category.dropna().unique()
+
+                    selected_customer_pivot_b = pd.pivot_table(selected_customer_b,
+                                                               values=["Quantity", "LineAmount"],
+                                                               index=["Revenue_Category", "Workday_Sales_Item_Name"],
+                                                               aggfunc="sum").reset_index()
+                    selected_customer_pivot_b[
+                        "Avg Rate"] = selected_customer_pivot_b.LineAmount / selected_customer_pivot_b.Quantity
+
+                    col1b, col2b = st.columns((2, 0.1))
+
+                    with col1b:
+
+                        customer_avg_plts_b = \
+                            selected_customer_b[selected_customer_b['Revenue_Category'] == 'Storage - Renewal'][
+                                "Quantity"].mean()
+                        pallets_handled_in_b = \
+                            selected_customer_b[selected_customer_b['Revenue_Category'] == 'Handling - Initial'][
+                                "Quantity"].sum()
+
+                        pallets_handled_out_b = \
+                            selected_customer_b[selected_customer_b['Revenue_Category'] == 'Handling Out'][
+                                "Quantity"].sum()
+
+                        estimate_turn_b = ((pallets_handled_in_b + pallets_handled_in_b) / 2) / customer_avg_plts_b
+
+                        selected_customer_pivot_table_b = selected_customer_pivot_b.style.format({
+                            "LineAmount": "${0:,.2f}",
+                            "Quantity": "{0:,.0f}",
+                            "Avg Rate": "${0:,.2f}",
+                            "UnitPrice": "${0:,.2f}",
+                        })
+
+                        selected_customer_pivot_table_b = selected_customer_pivot_table_b.map(highlight_negative_values)
+
+                        selected_customer_pivot_table_b = style_dataframe((selected_customer_pivot_table_b))
+                        selected_customer_pivot_table_b = selected_customer_pivot_table_b.hide(axis="index")
+
+                        st.write(selected_customer_pivot_table_b.to_html(), unsafe_allow_html=True)
+
+                        # Convert DataFrame to Excel
+                        output681 = io.BytesIO()
+                        with pd.ExcelWriter(output681) as writer:
+                            selected_customer_pivot.to_excel(writer)
+
+                        # Create a download button
+                        st.download_button(
+                            label="Download Excel  ⤵️",
+                            data=output681,
+                            file_name='invoiced_data.xlsx',
+                            mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                            key=691
+                        )
+
+                    skip1b, skip2b, skip3b, skip4b = st.columns(4)
+
+                    with skip1b:
+                        # delta_value = (customer_avg_plts / site_avg_plts_occupied)/100
+                        # formartted_value = "{:.2%}".format(delta_value)
+                        st.metric(label=f" Customer Avg Recurring Storage", value=f"{customer_avg_plts_b:,.0f} Plts",
+                                  delta=f"~{estimate_turn_b:,.1f}: Estimate Turn",
+                                  border=False)
+
+                    with skip2b:
+                        pallet_billed_services_b = ['Blast Freezing', 'Storage - Initial', 'Storage - Renewal']
+
+                        filtered_data_b = \
+                            selected_customer_b[selected_customer_b["Revenue_Category"].isin(pallet_billed_services_b)][
+                                "LineAmount"].sum()
+                        ancillary_data_b = selected_customer_b["LineAmount"].sum() - filtered_data_b
+
+                        filtered_data_contribution_b = filtered_data_b / (filtered_data_b + ancillary_data_b)
+
+                        st.metric(label="Rent & Storage & Blast", value=f"${filtered_data_b:,.0f} ",
+                                  delta=f"{filtered_data_contribution_b:,.0%} : of Revenue", border=False)
+
+                    with skip3b:
+                        st.metric(label="Services", value=f"${ancillary_data_b:,.0f}",
+                                  delta=f"{1 - filtered_data_contribution_b:,.0%} : of Revenue", border=False)
+
+                st.text("")
+                st.text("")
+
+            with(invoice_rates_by_service):
+
+                # all_workday_Services = invoice_rates.Revenue_Category.unique()
+                # all_unit_of_measures = invoice_rates.UnitOfMeasure.unique()
+
+                select_Option1_service, select_Option2_service = st.columns((1.5,1))
+
+                with select_Option1_service:
+                    sel1_service, sel2_service, sel3_service, sel4b_service = st.columns((2, 2, 2,1))
+
+                    selected_cost_centre_sel1 = sel1_service.selectbox("Cost Centre :", cost_centres, index=0, key=1115)
+
+                    selected_workday_customers = invoice_rates[
+                        invoice_rates.Cost_Center == selected_cost_centre_sel1].sort_values(
+                        by="WorkdayCustomer_Name").WorkdayCustomer_Name.unique()
+
+                    select_CC_data = invoice_rates[invoice_rates.Cost_Center == selected_cost_centre_sel1]
+
+                    all_workday_Services = select_CC_data.Revenue_Category.unique()
+
+                    with sel2_service:
+                        if selected_cost_centre_sel1:
+                            select_service = st.selectbox("Service Charge : ", all_workday_Services,
+                                                            index=0, key=1124)
+                        else:
+                            select_service = st.multiselect("Service Charge : ", all_workday_Services,
+                                                             all_workday_Services[0], key=1127)
+
+                    all_unit_of_measures = select_CC_data[select_CC_data.Revenue_Category == select_service].UnitOfMeasure.unique()
+
+                    with sel3_service:
+                        select_UOM = st.multiselect("Unit of Measure : ", all_unit_of_measures,
+                                                    all_unit_of_measures, key=1136)
+
+
+                    Workday_Sales_Item_Name = invoice_rates.Workday_Sales_Item_Name.unique()
+
+                    selected_customer = select_CC_data[select_CC_data.Revenue_Category == select_service]
+
+                    selected_customer = selected_customer[selected_customer.UnitOfMeasure.isin(select_UOM)]
+
+                    Revenue_Category = selected_customer.Revenue_Category.dropna().unique()
+
+                    display_rate =  sel4b_service.selectbox("Avg Rate | UnitPrice : ", ["Avg Rate", "UnitPrice"],
+                                               index=0, key=1152)
+
+                    if display_rate == "UnitPrice":
+                        selected_customer_pivot = pd.pivot_table(selected_customer,
+                                                             values=["Quantity", "LineAmount"],
+                                                             index=["WorkdayCustomer_Name", "UnitOfMeasure","UnitPrice"],
+                                                             aggfunc="sum").reset_index()
+                    else:
+
+                        selected_customer_pivot = pd.pivot_table(selected_customer,
+                                                                 values=["Quantity", "LineAmount"],
+                                                                 index=["WorkdayCustomer_Name", "UnitOfMeasure",],
+                                                                 aggfunc="sum").reset_index()
+
+                        selected_customer_pivot[
+                            "Avg Rate"] = selected_customer_pivot.LineAmount / selected_customer_pivot.Quantity
+
+
+                    selected_customer_pivot =  selected_customer_pivot.sort_values(by="WorkdayCustomer_Name",ascending=True)
+
+
+                    col1_service, col2_service = st.columns((2, 0.1))
+
+                    with col1_service:
+
+                        customer_avg_plts = selected_customer[selected_customer['Revenue_Category'] == 'Storage - Renewal'][
+                            "Quantity"].sum()
+                        pallets_handled_in = \
+                            selected_customer[selected_customer['Revenue_Category'] == 'Handling - Initial'][
+                                "Quantity"].sum()
+
+                        pallets_handled_out = selected_customer[selected_customer['Revenue_Category'] == 'Handling Out'][
                             "Quantity"].sum()
 
-                    estimate_turn_b = ((pallets_handled_in_b + pallets_handled_in_b) / 2) / customer_avg_plts_b
+                        estimate_turn = ((pallets_handled_in + pallets_handled_in) / 2) / customer_avg_plts
 
-                    selected_customer_pivot_table_b = selected_customer_pivot_b.style.format({
-                        "LineAmount": "${0:,.2f}",
-                        "Quantity": "{0:,.0f}",
-                        "Avg Rate": "${0:,.2f}",
-                    })
+                        selected_customer_pivot_table = selected_customer_pivot.style.format({
+                            "LineAmount": "${0:,.2f}",
+                            "Quantity": "{0:,.0f}",
+                            "UnitPrice": "${0:,.2f}",
+                            "Avg Rate": "${0:,.2f}",
+                            "estimate_turn": "{0:,.1f}"
+                        })
 
-                    selected_customer_pivot_table_b = selected_customer_pivot_table_b.map(highlight_negative_values)
+                        selected_customer_pivot_table = selected_customer_pivot_table.map(highlight_negative_values)
 
-                    selected_customer_pivot_table_b = style_dataframe((selected_customer_pivot_table_b))
-                    selected_customer_pivot_table_b = selected_customer_pivot_table_b.hide(axis="index")
+                        selected_customer_pivot_table = style_dataframe(selected_customer_pivot_table)
+                        selected_customer_pivot_table = selected_customer_pivot_table.hide(axis="index")
 
-                    st.write(selected_customer_pivot_table_b.to_html(), unsafe_allow_html=True)
+                        st.write(selected_customer_pivot_table.to_html(), unsafe_allow_html=True)
 
-                    # Convert DataFrame to Excel
-                    output681 = io.BytesIO()
-                    with pd.ExcelWriter(output681) as writer:
-                        selected_customer_pivot.to_excel(writer)
+                        # Convert DataFrame to Excel
+                        output1171 = io.BytesIO()
+                        with pd.ExcelWriter(output1171) as writer:
+                            selected_customer_pivot.to_excel(writer)
 
-                    # Create a download button
-                    st.download_button(
-                        label="Download Excel  ⤵️",
-                        data=output681,
-                        file_name='invoiced_data.xlsx',
-                        mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                        key=691
-                    )
+                        # Create a download button
+                        st.download_button(
+                            label="Download Excel  ⤵️",
+                            data=output1171,
+                            file_name='invoiced_data.xlsx',
+                            mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                            key=1181
+                        )
 
-                skip1b, skip2b, skip3b, skip4b = st.columns(4)
+                    skip1_service, skip2_service, skip3_service, skip4_service = st.columns(4)
 
-                with skip1b:
-                    # delta_value = (customer_avg_plts / site_avg_plts_occupied)/100
-                    # formartted_value = "{:.2%}".format(delta_value)
-                    st.metric(label=f" Customer Avg Recurring Storage", value=f"{customer_avg_plts_b:,.0f} Plts",
-                              delta=f"~{estimate_turn_b:,.1f}: Estimate Turn",
-                              border=False)
+                    with skip1_service:
+                        pass
+                        # st.metric(label=f" Customer Avg Recurring Storage", value=f"{customer_avg_plts:,.0f} Plts",
+                        #           delta=f"{estimate_turn:,.1f} : Estimate Turn",
+                        #           border=False)
 
-                with skip2b:
-                    pallet_billed_services_b = ['Blast Freezing', 'Storage - Initial', 'Storage - Renewal']
+                    with skip2_service:
+                        pallet_billed_services = ['Blast Freezing', 'Storage - Initial', 'Storage - Renewal']
 
-                    filtered_data_b = \
-                        selected_customer_b[selected_customer_b["Revenue_Category"].isin(pallet_billed_services_b)][
-                            "LineAmount"].sum()
-                    ancillary_data_b = selected_customer_b["LineAmount"].sum() - filtered_data_b
+                        filtered_data = \
+                            selected_customer[selected_customer["Revenue_Category"].isin(pallet_billed_services)][
+                                "LineAmount"].sum()
+                        ancillary_data = selected_customer["LineAmount"].sum() - filtered_data
 
-                    filtered_data_contribution_b = filtered_data_b / (filtered_data_b + ancillary_data_b)
+                        filtered_data_contribution = filtered_data / (filtered_data + ancillary_data)
 
-                    st.metric(label="Rent & Storage & Blast", value=f"${filtered_data_b:,.0f} ",
-                              delta=f"{filtered_data_contribution_b:,.0%} : of Revenue", border=False)
+                        st.metric(label="Rent & Storage & Blast", value=f"${filtered_data:,.0f} ", border=False)
 
-                with skip3b:
-                    st.metric(label="Services", value=f"${ancillary_data_b:,.0f}",
-                              delta=f"{1 - filtered_data_contribution_b:,.0%} : of Revenue", border=False)
+                    with skip3_service:
+                        st.metric(label="Services", value=f"${ancillary_data:,.0f}", border=False)
 
-        st.text("")
-        st.text("")
+                with select_Option2_service:
+
+                    st.subheader("2024 Customers Service Rates Comparison", divider='rainbow')
+
+                    def1_service, wt1_service, def2_service = st.columns((1,3,1))
+
+                    with wt1_service:
+
+                        st.markdown(f"""
+                                \n
+                            __Raw Invoice Data :__ \n
+                            Note - data used excludes Credit Note entries. \n
+                            \n
+                            1. Select __Service Charges__ and respective __Unit of Measure.__ \n
+                            2. Multiple Customer entries may mean in year Rate Review. \n
+                            3. Some Sites have billing inconsistencies (e.g bill by amount).\n 
+                            4. When Avg Rate Selected - may not be the exact Customer Rate as per Rate Card. 
+                            
+                        """)
+
+
+
+                    # st.divider()
+
+
 
         with st.expander("Select Customer to Benchmark", expanded=True):
             customer_list = rank_display_data.Name.unique()
