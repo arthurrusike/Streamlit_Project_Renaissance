@@ -102,26 +102,24 @@ def load_specific_xls_sheet(file, sheet_name, header, use_cols):
     return cached_xls_sheet
 
 
-@st.cache_data
+
+@st.cache_resource
+def init_connection():
+    return pyodbc.connect('Trusted_Connection=yes; DSN=CalumoCoreDW; Driver=pyodbc ')
+
+
+@st.cache_data(ttl=3600)
 def run_sql_query(startDate, endDate):
     """
     Connects to a SQL database using pyodbc
+    conn_str = 'Trusted_Connection=yes; Server=au-cl1-dwdb\dwprod;  DATABASE=CoreDW; Driver={{ODBC Driver 18 for SQL Server}} '
     """
 
-    conn_str = 'Trusted_Connection=yes; Server=au-cl1-dwdb\dwprod;  DATABASE=CoreDW; Driver={{ODBC Driver 18 for SQL Server}} '
-    # conn_str = 'Trusted_Connection=yes; DSN=CalumoCoreDW; '
+    conn_str = init_connection()
 
-
-    try:
-        conn = pyodbc.connect(conn_str)
-        print("Connection successful!")
-        conn.close()
-    except pyodbc.Error as e:
-        print("Error in connection:", e)
-
-    conn = pyodbc.connect(conn_str)
     slqQuery = f"SELECT * from CoreDW.[stgAQT].[vwRates] where [InvoiceDate] between '{str(startDate)}' AND '{str(endDate)}' and [Cost_Center] like '%S&H%' Order By SourceSystem, InvoiceNumber"
-    invoice_rates = pd.read_sql_query(slqQuery, conn)
-    conn.close()
+    invoice_rates = pd.read_sql_query(slqQuery, conn_str)
+
+    conn_str.close()
 
     return invoice_rates
