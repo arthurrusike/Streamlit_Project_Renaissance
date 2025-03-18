@@ -104,8 +104,7 @@ def load_specific_xls_sheet(file, sheet_name, header, use_cols):
 @st.cache_data
 def run_sql_query(startDate, endDate):
 
-    conn_string = 'DSN=CalumoCoreDW; Trusted_Connection=yes; Driver=QL Server;'
-    conn = pyodbc.connect(conn_string)
+    conn = pyodbc.connect('DSN=CalumoCoreDW; Trusted_Connection=yes; DRIVER=SQL Server;')
 
     slqQuery = f"SELECT * from CoreDW.[stgAQT].[vwRates] where [InvoiceDate] between '{str(startDate)}' AND '{str(endDate)}' and [Cost_Center] like '%S&H%' Order By SourceSystem, InvoiceNumber"
     invoice_rates = pd.read_sql_query(slqQuery, conn)
