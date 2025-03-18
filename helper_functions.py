@@ -106,7 +106,7 @@ def run_sql_query(startDate , endDate  ):
     """
 
     # conn_str = 'Trusted_Connection=Yes; DSN=CalumoCoreDW; DATABASE=CoreDW; '
-    conn_str = 'Trusted_Connection=Yes; DSN=CalumoCoreDW; Connection=ODBC '
+    conn_str = 'Trusted_Connection=Yes; DSN=CalumoCoreDW; Connection=ODBC; DATABASE=CoreDW; Driver=SQL Server '
     slqQuery = f"SELECT * from CoreDW.[stgAQT].[vwRates] where [InvoiceDate] between '{str(startDate)}' AND '{str(endDate)}' and [Cost_Center] like '%S&H%' Order By SourceSystem, InvoiceNumber"
     conn = pyodbc.connect(conn_str)
     invoice_rates = pd.read_sql_query(slqQuery, conn)
