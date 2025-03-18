@@ -21,7 +21,7 @@ from plotly.subplots import make_subplots
 st.set_page_config(page_title="Project Renaissance Analysis", page_icon="📊", layout="wide",
                    initial_sidebar_state="expanded")
 
-
+print(pyodbc.drivers())
 def extract_cc(cost_centre):
     return cost_centre[:9]
 
