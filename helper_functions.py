@@ -108,10 +108,17 @@ def run_sql_query(startDate, endDate):
     Connects to a SQL database using pyodbc
     """
 
-    conn_str = 'TRUSTED_CONNECTION=Yes; SERVER=au-cl1-dwdb\dwprod; DSN=CalumoCoreDW; DATABASE=CoreDW; DRIVER={SQL Server Native Client 11.0}; '
+    conn_str = 'Trusted_Connection=yes; Server=au-cl1-dwdb\dwprod;  DATABASE=CoreDW; DRIVER={SQL Server}; '
+
+
+    try:
+        conn = pyodbc.connect(conn_str)
+        print("Connection successful!")
+        conn.close()
+    except pyodbc.Error as e:
+        print("Error in connection:", e)
 
     conn = pyodbc.connect(conn_str)
-
     slqQuery = f"SELECT * from CoreDW.[stgAQT].[vwRates] where [InvoiceDate] between '{str(startDate)}' AND '{str(endDate)}' and [Cost_Center] like '%S&H%' Order By SourceSystem, InvoiceNumber"
     invoice_rates = pd.read_sql_query(slqQuery, conn)
     conn.close()
