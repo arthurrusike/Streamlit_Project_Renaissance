@@ -112,6 +112,7 @@ def run_sql_query(startDate, endDate):
     conn_str = pyodbc.connect(
         "DSN=CalumoCoreDW;"
         "TRUSTED_CONNECTION=Yes;"
+        "SERVER=au-cl1-dwdb\dwprod"
     )
 
     slqQuery = f"SELECT * from CoreDW.[stgAQT].[vwRates] where [InvoiceDate] between '{str(startDate)}' AND '{str(endDate)}' and [Cost_Center] like '%S&H%' Order By SourceSystem, InvoiceNumber"
