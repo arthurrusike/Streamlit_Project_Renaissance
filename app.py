@@ -1,4 +1,5 @@
 import io
+import pyodbc
 import random
 from io import BytesIO
 import datetime
@@ -942,6 +943,7 @@ try:
 
                 except Exception as e:
                     err_1,err_2, err_3, = st.columns(3)
+                    st.write(e)
                     err_2.markdown(f"""
                                         \n
                                     __Raw Invoice Data :__ \n
