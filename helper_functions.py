@@ -8,48 +8,49 @@ import pyodbc
 def style_dataframe(df):
     return (
         df.set_table_styles(
-        [{
-            'selector': 'th',
-            'props': [
-                ('background-color', '#305496'),
-                ('width', 'auto'),
-                ('color', 'white'),
-                ('font-family', 'sans-serif, Arial'),
-                ('font-size', '12px'),
-                ('text-align', 'center')
-            ]
-        },
-            {
-                'selector': ' th',
+            [{
+                'selector': 'th',
                 'props': [
-                    ('border', '2px solid white')
-                ]
-            },
-            {
-                'selector': ' tr:hover',
-                'props': [
-                    ('border', '1px solid #4CAF50'),
-                    ('background-color', 'wheat'),
-
-                ]
-            },
-            {
-                'selector': ' tr',
-                'props': [
-                    ('text-align', 'right'),
-                    ('font-size', '12px'),
+                    ('background-color', '#305496'),
+                    ('width', 'auto'),
+                    ('color', 'white'),
                     ('font-family', 'sans-serif, Arial'),
-
+                    ('font-size', '12px'),
+                    ('text-align', 'center')
                 ]
-            }
-        ]
-    )
+            },
+                {
+                    'selector': ' th',
+                    'props': [
+                        ('border', '2px solid white')
+                    ]
+                },
+                {
+                    'selector': ' tr:hover',
+                    'props': [
+                        ('border', '1px solid #4CAF50'),
+                        ('background-color', 'wheat'),
+
+                    ]
+                },
+                {
+                    'selector': ' tr',
+                    'props': [
+                        ('text-align', 'right'),
+                        ('font-size', '12px'),
+                        ('font-family', 'sans-serif, Arial'),
+
+                    ]
+                }
+            ]
+        )
 
     )
 
 
 def extract_cc(cost_centre):
     return cost_centre[:9]
+
 
 def extract_name(value):
     return value.split(" [")[0].title()
@@ -96,34 +97,25 @@ def load_rates_standardisation(uploaded_file):
 
 
 @st.cache_data
-def load_specific_xls_sheet( file, sheet_name, header, use_cols):
-     cached_xls_sheet = pd.read_excel(file, sheet_name=sheet_name, header=header, usecols=use_cols)
-     return cached_xls_sheet
-
+def load_specific_xls_sheet(file, sheet_name, header, use_cols):
+    cached_xls_sheet = pd.read_excel(file, sheet_name=sheet_name, header=header, usecols=use_cols)
+    return cached_xls_sheet
 
 
 @st.cache_data
-def run_sql_query(startDate , endDate  ):
+def run_sql_query(startDate, endDate):
     """
     Connects to a SQL database using pyodbc
     """
-    print(pyodbc.drivers())
-    try:
-        # conn_str = 'TRUSTED_CONNECTION=Yes; DSN=CalumoCoreDW; CONNECTION=ODBC; DATABASE=CoreDW; DRIVER={SQL Server Native Client 11.0}; DATASOURCE=scscl1dw01 '
-        conn_str = pyodbc.connect(
-            "DSN=CalumoCoreDW;"
-            "Trusted_Connection=yes;"
-        )
 
-        slqQuery = f"SELECT * from CoreDW.[stgAQT].[vwRates] where [InvoiceDate] between '{str(startDate)}' AND '{str(endDate)}' and [Cost_Center] like '%S&H%' Order By SourceSystem, InvoiceNumber"
-        invoice_rates = pd.read_sql_query(slqQuery, conn_str)
-        conn_str.close()
+    # conn_str = 'TRUSTED_CONNECTION=Yes; DSN=CalumoCoreDW; CONNECTION=ODBC; DATABASE=CoreDW; DRIVER={SQL Server Native Client 11.0}; DATASOURCE=scscl1dw01 '
+    conn_str = pyodbc.connect(
+        "DSN=CalumoCoreDW;"
+        "TRUSTED_CONNECTION=Yes;"
+    )
 
-        return invoice_rates
+    slqQuery = f"SELECT * from CoreDW.[stgAQT].[vwRates] where [InvoiceDate] between '{str(startDate)}' AND '{str(endDate)}' and [Cost_Center] like '%S&H%' Order By SourceSystem, InvoiceNumber"
+    invoice_rates = pd.read_sql_query(slqQuery, conn_str)
+    conn_str.close()
 
-    except pyodbc.Error as e:
-        print("Error in connection:", e)
-        return None
-
-
-
+    return invoice_rates
