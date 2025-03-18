@@ -90,7 +90,6 @@ def load_profitbility_Summary_model(uploaded_file):
 @st.cache_data
 def load_rates_standardisation(uploaded_file):
     excel_file = pd.ExcelFile(uploaded_file)
-
     return excel_file
 
 
@@ -98,7 +97,6 @@ def load_rates_standardisation(uploaded_file):
 def load_specific_xls_sheet( file, sheet_name, header, use_cols):
      cached_xls_sheet = pd.read_excel(file, sheet_name=sheet_name, header=header, usecols=use_cols)
      return cached_xls_sheet
-
 
 
 @st.cache_data
