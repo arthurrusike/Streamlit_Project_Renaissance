@@ -105,7 +105,7 @@ def load_specific_xls_sheet(file, sheet_name, header, use_cols):
 
 @st.cache_resource
 def init_connection():
-    return pyodbc.connect('DSN=CalumoCoreDW;')
+    return pyodbc.connect('DSN=CalumoCoreDW;Description=CalumoCoreDW; Trusted_Connection=Yes; DATABASE=CoreDW;')
 
 
 @st.cache_data
