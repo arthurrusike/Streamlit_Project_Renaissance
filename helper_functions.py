@@ -108,7 +108,7 @@ def init_connection():
     return pyodbc.connect('Trusted_Connection=yes; DSN=CalumoCoreDW; Driver=pyodbc ')
 
 
-@st.cache_data(ttl=3600)
+@st.cache_data
 def run_sql_query(startDate, endDate):
     """
     Connects to a SQL database using pyodbc
