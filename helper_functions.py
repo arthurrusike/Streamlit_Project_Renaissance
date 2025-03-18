@@ -105,14 +105,14 @@ def load_specific_xls_sheet(file, sheet_name, header, use_cols):
 
 @st.cache_resource
 def init_connection():
-    return pyodbc.connect('DSN=CalumoCoreDW;Description=CalumoCoreDW; Trusted_Connection=Yes; DATABASE=CoreDW;')
+    conn_string = 'DSN=CalumoCoreDW; Trusted_Connection=yes;'
+    return pyodbc.connect(conn_string)
 
 
 @st.cache_data
 def run_sql_query(startDate, endDate):
     """
     Connects to a SQL database using pyodbc
-    conn_str = 'Trusted_Connection=yes; Server=au-cl1-dwdb\dwprod;  DATABASE=CoreDW; Driver={{ODBC Driver 18 for SQL Server}} '
     """
 
 
