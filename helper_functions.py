@@ -1,52 +1,56 @@
+from altair.theme import active
+
 import streamlit as st
 import pandas as pd
+import pyodbc
 
 
 def style_dataframe(df):
     return (
         df.set_table_styles(
-        [{
-            'selector': 'th',
-            'props': [
-                ('background-color', '#305496'),
-                ('width', 'auto'),
-                ('color', 'white'),
-                ('font-family', 'sans-serif, Arial'),
-                ('font-size', '12px'),
-                ('text-align', 'center')
-            ]
-        },
-            {
-                'selector': ' th',
+            [{
+                'selector': 'th',
                 'props': [
-                    ('border', '2px solid white')
-                ]
-            },
-            {
-                'selector': ' tr:hover',
-                'props': [
-                    ('border', '1px solid #4CAF50'),
-                    ('background-color', 'wheat'),
-
-                ]
-            },
-            {
-                'selector': ' tr',
-                'props': [
-                    ('text-align', 'right'),
-                    ('font-size', '12px'),
+                    ('background-color', '#305496'),
+                    ('width', 'auto'),
+                    ('color', 'white'),
                     ('font-family', 'sans-serif, Arial'),
-
+                    ('font-size', '12px'),
+                    ('text-align', 'center')
                 ]
-            }
-        ]
-    )
+            },
+                {
+                    'selector': ' th',
+                    'props': [
+                        ('border', '2px solid white')
+                    ]
+                },
+                {
+                    'selector': ' tr:hover',
+                    'props': [
+                        ('border', '1px solid #4CAF50'),
+                        ('background-color', 'wheat'),
+
+                    ]
+                },
+                {
+                    'selector': ' tr',
+                    'props': [
+                        ('text-align', 'right'),
+                        ('font-size', '12px'),
+                        ('font-family', 'sans-serif, Arial'),
+
+                    ]
+                }
+            ]
+        )
 
     )
 
 
 def extract_cc(cost_centre):
     return cost_centre[:9]
+
 
 def extract_name(value):
     return value.split(" [")[0].title()
@@ -83,22 +87,31 @@ def sub_category_classification(dtframe):
 def load_profitbility_Summary_model(uploaded_file):
     customer_profitability_summary = pd.read_excel(uploaded_file, sheet_name="ChartData", header=5, usecols="B:BM")
     customer_profitability_summary = customer_profitability_summary[customer_profitability_summary[" Revenue"] > 0]
-    # invoice_rates["Calumo Description"] = invoice_rates.apply(sub_category_classification, axis=1)
-    # invoice_rates['formatted_date'] = pd.to_datetime(invoice_rates['InvoiceDate'])
-    # invoice_rates.formatted_date = invoice_rates.formatted_date.dt.strftime('%Y-%m-%d')
-    # invoice_rates.sort_values("InvoiceNumber", inplace=True)
     return customer_profitability_summary
 
 
 @st.cache_data
 def load_rates_standardisation(uploaded_file):
     excel_file = pd.ExcelFile(uploaded_file)
-
     return excel_file
+
+
 @st.cache_data
-def load_specific_xls_sheet( file, sheet_name, header, use_cols):
-     cached_xls_sheet = pd.read_excel(file, sheet_name=sheet_name, header=header, usecols=use_cols)
-     return cached_xls_sheet
+def load_specific_xls_sheet(file, sheet_name, header, use_cols):
+    cached_xls_sheet = pd.read_excel(file, sheet_name=sheet_name, header=header, usecols=use_cols)
+    return cached_xls_sheet
+
+@st.cache_data
+def run_sql_query(startDate, endDate):
+
+    # conn = pyodbc.connect('DSN=CalumoCoreDW; Trusted_Connection=yes; DRIVER=SQL Server;')
+    # conn = pyodbc.connect('Driver={{SQL Server}};Server=au-cl1-dwdb\dwprod;Database= CoreDW;Trusted_Connection=yes;DSN=CalumoCoreDW;')
+    conn = pyodbc.connect('Trusted_Connection=yes;DSN=CalumoCoreDW;')
+
+    slqQuery = f"SELECT * from CoreDW.[stgAQT].[vwRates] where [InvoiceDate] between '{str(startDate)}' AND '{str(endDate)}' and [Cost_Center] like '%S&H%' Order By SourceSystem, InvoiceNumber"
+    invoice_rates = pd.read_sql_query(slqQuery, conn)
+
+    return invoice_rates
 
 
 
