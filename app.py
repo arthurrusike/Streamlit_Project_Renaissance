@@ -11,8 +11,8 @@ import matplotlib.pyplot as plt
 from pandas.core.arrays.categorical import contains
 
 import streamlit as st
-from helper_functions import style_dataframe, load_profitbility_Summary_model, load_specific_xls_sheet, run_sql_query, sub_category_classification
-# from site_detailed_view import invoice_rates
+from helper_functions import style_dataframe, run_sql_query, sub_category_classification
+# from site_detailed_view import invoice_rates load_profitbility_Summary_model,load_specific_xls_sheet
 from streamlit import session_state as ss
 from plotly.subplots import make_subplots
 from site_detailed_view_helper_functions import load_invoices_model, profitability_model
