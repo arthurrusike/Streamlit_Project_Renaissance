@@ -108,7 +108,8 @@ def run_sql_query(startDate, endDate):
     Connects to a SQL database using pyodbc
     """
 
-    conn_str = 'Trusted_Connection=yes; Server=au-cl1-dwdb\dwprod;  DATABASE=CoreDW; DRIVER={SQL Server}; '
+    conn_str = 'Trusted_Connection=yes; Server=au-cl1-dwdb\dwprod;  DATABASE=CoreDW; '
+    # conn_str = 'Trusted_Connection=yes; DSN=CalumoCoreDW; '
 
 
     try:
