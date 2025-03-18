@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import pyodbc
 
 
 def style_dataframe(df):
@@ -83,10 +84,6 @@ def sub_category_classification(dtframe):
 def load_profitbility_Summary_model(uploaded_file):
     customer_profitability_summary = pd.read_excel(uploaded_file, sheet_name="ChartData", header=5, usecols="B:BM")
     customer_profitability_summary = customer_profitability_summary[customer_profitability_summary[" Revenue"] > 0]
-    # invoice_rates["Calumo Description"] = invoice_rates.apply(sub_category_classification, axis=1)
-    # invoice_rates['formatted_date'] = pd.to_datetime(invoice_rates['InvoiceDate'])
-    # invoice_rates.formatted_date = invoice_rates.formatted_date.dt.strftime('%Y-%m-%d')
-    # invoice_rates.sort_values("InvoiceNumber", inplace=True)
     return customer_profitability_summary
 
 
@@ -95,10 +92,26 @@ def load_rates_standardisation(uploaded_file):
     excel_file = pd.ExcelFile(uploaded_file)
 
     return excel_file
+
+
 @st.cache_data
 def load_specific_xls_sheet( file, sheet_name, header, use_cols):
      cached_xls_sheet = pd.read_excel(file, sheet_name=sheet_name, header=header, usecols=use_cols)
      return cached_xls_sheet
 
 
+
+@st.cache_data
+def run_sql_query(startDate , endDate  ):
+    """
+    Connects to a SQL database using pyodbc
+    """
+
+    conn_str = 'DSN=CalumoCoreDW; DATABASE=CoreDW; Trusted_Connection=Yes;'
+    slqQuery = f"SELECT * from CoreDW.[stgAQT].[vwRates] where [InvoiceDate] between '{str(startDate)}' AND '{str(endDate)}' and [Cost_Center] like '%S&H%' Order By SourceSystem, InvoiceNumber"
+    conn = pyodbc.connect(conn_str)
+    invoice_rates = pd.read_sql_query(slqQuery, conn)
+    conn.close()
+
+    return invoice_rates
 
