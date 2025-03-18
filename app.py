@@ -14,7 +14,7 @@ from plotly.subplots import make_subplots
 
 from site_detailed_view_helper_functions import load_invoices_model, profitability_model
 
-st.set_page_config(page_title="Project Renaissance Analysis", page_icon="📊", layout="wide",
+st.set_page_config(page_title="Project Renaissance Analysis - AU", page_icon="📊", layout="wide",
                    initial_sidebar_state="expanded")
 
 
