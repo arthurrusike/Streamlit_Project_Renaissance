@@ -64,6 +64,8 @@ def proper_case(value):
 
 
 today = datetime.datetime.now()
+
+
 def date_three_weeks_ago(today_date, number_of_weeks=3):
     # Subtract 3 weeks (21 days) from the given date
     three_weeks_ago = today_date - timedelta(weeks=number_of_weeks)
@@ -106,10 +108,10 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
 
     invoice_rates = invoice_rates
 
-    DetailsTab,  AboutTab = st.tabs(["📊 Quick View",
-                                             # "🥇 Site Detailed View",
-                                             # "📈 Estimate Profitability",
-                                             "ℹ️ About"])
+    DetailsTab, AboutTab = st.tabs(["📊 Quick View",
+                                    # "🥇 Site Detailed View",
+                                    # "📈 Estimate Profitability",
+                                    "ℹ️ About"])
 
 
     def highlight_negative_values(value):
@@ -1330,7 +1332,6 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
                             4. When Avg Rate Selected - may not be the exact Customer Rate as per Rate Card. 
                             
                         """)
-
 
         st.divider()
 
@@ -2639,5 +2640,6 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
     #
     #     st.divider()
     with AboutTab:
-        st.markdown(f'##### Arthur Rusike: *Report any Code breaks or when you see Red Error Message*'
+        st.markdown(f'''##### Arthur Rusike:
+                                *Report any Code breaks or when you see Red Error Message*'''
                     )
