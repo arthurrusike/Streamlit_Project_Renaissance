@@ -2640,6 +2640,7 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
     #
     #     st.divider()
     with AboutTab:
-        st.markdown(f'''##### Arthur Rusike:
-                                *Report any Code breaks or when you see Red Error Message*'''
+        st.markdown('''##### Arthur Rusike:
+                                *Report any Code breaks or when you see Red Error Message*
+                            '''
                     )
