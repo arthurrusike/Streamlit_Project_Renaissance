@@ -8,7 +8,9 @@ import pyodbc
 def style_dataframe(df):
     return (
         df.set_table_styles(
-            [{
+
+            [
+                {
                 'selector': 'th',
                 'props': [
                     ('background-color', '#305496'),
