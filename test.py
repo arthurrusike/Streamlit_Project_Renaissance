@@ -1000,16 +1000,13 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
                 cost_centres = invoice_rates.Cost_Center.unique()
 
                 with select_Option1:
-                    sel1, sel2, sel4b_service,sel3 = st.columns((3, 3,2, 1))
+                    sel1, sel2, sel3 = st.columns((3, 3, 1))
 
                     selected_cost_centre_sel1 = sel1.selectbox("Cost Centre :", cost_centres, index=0, key=544)
                     selected_workday_customers = invoice_rates[
                         invoice_rates.Cost_Center == selected_cost_centre_sel1].sort_values(
                         by="WorkdayCustomer_Name").WorkdayCustomer_Name.unique()
                     select_CC_data = invoice_rates[invoice_rates.Cost_Center == selected_cost_centre_sel1]
-
-                    display_rate = sel4b_service.selectbox("Avg Rate | UnitPrice : ", ["Avg Rate", "UnitPrice"],
-                                                           index=0, key=1012)
 
                     with sel2:
                         if selected_cost_centre_sel1:
@@ -1024,27 +1021,12 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
 
                     Revenue_Category = selected_customer.Revenue_Category.dropna().unique()
 
-                    if display_rate == "UnitPrice":
-                        selected_customer_pivot = pd.pivot_table(selected_customer,
-                                                                 values=["Quantity", "LineAmount"],
-                                                                 index=["Revenue_Category",  "UnitOfMeasure",
-                                                                        "UnitPrice"],
-                                                                 aggfunc="sum").reset_index()
-                    else:
-
-                        selected_customer_pivot = pd.pivot_table(selected_customer,
-                                                                 values=["Quantity", "LineAmount"],
-                                                                 index=["Revenue_Category", "UnitOfMeasure", ],
-                                                                 aggfunc="sum").reset_index()
-
-                        selected_customer_pivot[
+                    selected_customer_pivot = pd.pivot_table(selected_customer,
+                                                             values=["Quantity", "LineAmount"],
+                                                             index=["Revenue_Category", "Workday_Sales_Item_Name", ],
+                                                             aggfunc="sum").reset_index()
+                    selected_customer_pivot[
                         "Avg Rate"] = selected_customer_pivot.LineAmount / selected_customer_pivot.Quantity
-
-                    selected_customer_pivot.Revenue_Category = selected_customer_pivot.Revenue_Category.apply(
-                            proper_case)
-
-                    selected_customer_pivot = selected_customer_pivot.sort_values(by=["Revenue_Category",display_rate],
-                                                                                  ascending=False)
 
                     col1, col2 = st.columns((2, 0.1))
 
@@ -1117,16 +1099,13 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
                                   delta=f"{1 - filtered_data_contribution:,.0%} : of Revenue", border=False)
                 with select_Option2:
 
-                    sel1b, sel2b, sel4b_service, sel3b = st.columns((3, 3,2, 1))
+                    sel1b, sel2b, sel3b = st.columns((3, 3, 1))
 
                     selected_cost_centre_b = sel1b.selectbox("Cost Centre :", cost_centres, index=0, key=635)
                     selected_workday_customers_b = invoice_rates[
                         invoice_rates.Cost_Center == selected_cost_centre_b].sort_values(
                         by="WorkdayCustomer_Name").WorkdayCustomer_Name.unique()
                     select_CC_data_b = invoice_rates[invoice_rates.Cost_Center == selected_cost_centre_b]
-
-                    display_rate = sel4b_service.selectbox("Avg Rate | UnitPrice : ", ["Avg Rate", "UnitPrice"],
-                                                           index=0, key=1129)
 
                     with sel2b:
                         if selected_cost_centre_b:
@@ -1142,27 +1121,12 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
 
                     Revenue_Category_b = selected_customer_b.Revenue_Category.dropna().unique()
 
-                    if display_rate == "UnitPrice":
-                        selected_customer_pivot_b = pd.pivot_table(selected_customer_b,
+                    selected_customer_pivot_b = pd.pivot_table(selected_customer_b,
                                                                values=["Quantity", "LineAmount"],
-                                                               index=["Revenue_Category", "UnitOfMeasure",
-                                                                      "UnitPrice"],
+                                                               index=["Revenue_Category", "Workday_Sales_Item_Name"],
                                                                aggfunc="sum").reset_index()
-                    else:
-                        selected_customer_pivot_b = pd.pivot_table(selected_customer_b,
-                                                                   values=["Quantity", "LineAmount"],
-                                                                   index=["Revenue_Category", "UnitOfMeasure"],
-                                                                   aggfunc="sum").reset_index()
-
                     selected_customer_pivot_b[
                         "Avg Rate"] = selected_customer_pivot_b.LineAmount / selected_customer_pivot_b.Quantity
-
-                    selected_customer_pivot_b.Revenue_Category = selected_customer_pivot_b.Revenue_Category.apply(
-                            proper_case)
-
-                    selected_customer_pivot_b = selected_customer_pivot_b.sort_values(by=["Revenue_Category",display_rate],
-                                                                                  ascending=False)
-
 
                     col1b, col2b = st.columns((2, 0.1))
 
@@ -1257,14 +1221,14 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
 
                     with sel2_service:
                         if selected_cost_centre_sel1:
-                            select_service = st.selectbox("Service Charge : ", all_workday_Services,
+                            select_service = st.selectbox("Customer : ", selected_workday_customers,
                                                           index=0, key=1124)
                         else:
-                            select_service = st.multiselect("Service Charge : ", all_workday_Services,
+                            select_service = st.multiselect("Customer : ", selected_workday_customers,
                                                             all_workday_Services[0], key=1127)
 
                     all_unit_of_measures = select_CC_data[
-                        select_CC_data.Revenue_Category == select_service].UnitOfMeasure.unique()
+                        select_CC_data.WorkdayCustomer_Name == select_service].UnitOfMeasure.unique()
 
                     with sel3_service:
                         select_UOM = st.multiselect("Unit of Measure : ", all_unit_of_measures,
@@ -1272,7 +1236,7 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
 
                     Workday_Sales_Item_Name = invoice_rates.Workday_Sales_Item_Name.unique()
 
-                    selected_customer = select_CC_data[select_CC_data.Revenue_Category == select_service]
+                    selected_customer = select_CC_data[select_CC_data.WorkdayCustomer_Name == select_service]
 
                     selected_customer = selected_customer[selected_customer.UnitOfMeasure.isin(select_UOM)]
 
@@ -1284,24 +1248,24 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
                     if display_rate == "UnitPrice":
                         selected_customer_pivot = pd.pivot_table(selected_customer,
                                                                  values=["Quantity", "LineAmount"],
-                                                                 index=["WorkdayCustomer_Name", "UnitOfMeasure",
+                                                                 index=["Revenue_Category", "UnitOfMeasure",
                                                                         "UnitPrice"],
                                                                  aggfunc="sum").reset_index()
                     else:
 
                         selected_customer_pivot = pd.pivot_table(selected_customer,
                                                                  values=["Quantity", "LineAmount"],
-                                                                 index=["WorkdayCustomer_Name", "UnitOfMeasure", ],
+                                                                 index=["Revenue_Category", "UnitOfMeasure", ],
                                                                  aggfunc="sum").reset_index()
 
                         selected_customer_pivot[
                             "Avg Rate"] = selected_customer_pivot.LineAmount / selected_customer_pivot.Quantity
 
-                    selected_customer_pivot.WorkdayCustomer_Name = selected_customer_pivot.WorkdayCustomer_Name.apply(
+                    selected_customer_pivot.Revenue_Category = selected_customer_pivot.Revenue_Category.apply(
                         proper_case)
 
-                    selected_customer_pivot = selected_customer_pivot.sort_values(by="WorkdayCustomer_Name",
-                                                                                  ascending=True)
+                    selected_customer_pivot = selected_customer_pivot.sort_values(by=["Revenue_Category",display_rate],
+                                                                                  ascending=False)
 
                     col1_service, col2_service = st.columns((2, 0.1))
 
@@ -1399,20 +1363,20 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
 
         site_list_rates = customer_rate_cards.Site.unique()
 
-        # _,weeks_input, _ = st.columns((3, 1, 3))
-        #
-        # weeks_ago = weeks_input.number_input(f"Invoiced at Site - in December 2024", value=4)
-        #
-        # changed_weeks_ago_date = date_three_weeks_ago(endDate, number_of_weeks=weeks_ago)
-        #
-        # default_3_weeks_ago_startDate = datetime.date(changed_weeks_ago_date.year, changed_weeks_ago_date.month,
-        #                                               changed_weeks_ago_date.day)
-        #
-        # invoice_rates.Cost_Center = invoice_rates.Cost_Center.apply(extract_site)
-        #
-        # site_list_rates = invoice_rates.Cost_Center.unique()
-        #
-        # box_whisker_invoice_rates = invoice_rates[invoice_rates.InvoiceDate > str(default_3_weeks_ago_startDate)]
+        _,weeks_input, _ = st.columns((3, 1, 3))
+
+        weeks_ago = weeks_input.number_input(f"Invoiced at Site - in December 2024", value=4)
+
+        changed_weeks_ago_date = date_three_weeks_ago(endDate, number_of_weeks=weeks_ago)
+
+        default_3_weeks_ago_startDate = datetime.date(changed_weeks_ago_date.year, changed_weeks_ago_date.month,
+                                                      changed_weeks_ago_date.day)
+
+        invoice_rates.Cost_Center = invoice_rates.Cost_Center.apply(extract_site)
+
+        site_list_rates = invoice_rates.Cost_Center.unique()
+
+        box_whisker_invoice_rates = invoice_rates[invoice_rates.InvoiceDate > str(default_3_weeks_ago_startDate)]
 
         v1, v2 = st.columns(2)
 
@@ -1423,25 +1387,33 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
 
         p1_Storage, p2_Handling, = st.columns((1, 1))
 
-        customer_rate_cards = customer_rate_cards[customer_rate_cards.Site == selected_site_rate_cards]
+        customer_rate_cards = box_whisker_invoice_rates[box_whisker_invoice_rates.Cost_Center == selected_site_rate_cards]
 
-        # customer_rate_cards = pd.pivot_table(customer_rate_cards,
-        #                                      values=["Quantity","LineAmount"],
-        #                                      index=["Cost_Center","WorkdayCustomer_Name","Revenue_Category", "Workday_Sales_Item_Name","UnitOfMeasure"],
-        #                                      aggfunc="sum").reset_index()
-        #
-        # customer_rate_cards["Rate"] = customer_rate_cards.LineAmount / customer_rate_cards.Quantity
-        # customer_rate_cards.WorkdayCustomer_Name = customer_rate_cards.WorkdayCustomer_Name.apply(extract_name)
-        # customer_rate_cards["Name"] = customer_rate_cards.WorkdayCustomer_Name
-        # customer_rate_cards.Name =  customer_rate_cards.Name.apply(extract_short_name)
-        # customer_rate_cards["Customer"] = customer_rate_cards["Name"]
+        customer_rate_cards = pd.pivot_table(customer_rate_cards,
+                                             values=["Quantity","LineAmount"],
+                                             index=["Cost_Center","WorkdayCustomer_Name","Revenue_Category", "Workday_Sales_Item_Name","UnitOfMeasure"],
+                                             aggfunc="sum").reset_index()
+
+        customer_rate_cards["Rate"] = customer_rate_cards.LineAmount / customer_rate_cards.Quantity
+        customer_rate_cards.WorkdayCustomer_Name = customer_rate_cards.WorkdayCustomer_Name.apply(extract_name)
+        customer_rate_cards["Name"] = customer_rate_cards.WorkdayCustomer_Name
+        customer_rate_cards.Name =  customer_rate_cards.Name.apply(extract_short_name)
+        customer_rate_cards["Customer"] = customer_rate_cards["Name"]
 
 
         try:
 
 
             with p1_Storage:
-                df_pStorage = customer_rate_cards[customer_rate_cards.Description == "Storage"]
+
+                df_pStorage = customer_rate_cards[(customer_rate_cards.Rate < 15) & (customer_rate_cards.Rate > 1)]
+
+                storage_uom = ["P","PLT","PAL","Pallet","PALLET","EA","O"]
+                df_pStorage = df_pStorage[df_pStorage.UnitOfMeasure.isin(storage_uom)]
+
+                p1_Storage_description = "Recurring Storage"
+                df_pStorage = df_pStorage[(df_pStorage.Workday_Sales_Item_Name == p1_Storage_description) | (df_pStorage.Workday_Sales_Item_Name == "Initial Storage")  ]
+
                 df_pStorage_customers_count = len(df_pStorage)
                 customer_names = df_pStorage.Customer
 
@@ -1517,9 +1489,17 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
 
             # Handling Box plot ####################################################################
             with p2_Handling:
-                df_pHandling = customer_rate_cards[customer_rate_cards.Description == "Pallet Handling"]
-                df_pHandling_customers_count = len(df_pHandling)
-                handling_customer_names = df_pHandling.Customer
+
+                df_pHandling = customer_rate_cards[(customer_rate_cards.Rate < 15) & (customer_rate_cards.Rate > 1)]
+
+                handling_uom = ["P","PLT","PAL","Pallet","PALLET","O","C","ITEM"]
+                df_pHandling = df_pHandling[df_pHandling.UnitOfMeasure.isin(handling_uom)]
+
+                # p2_Handling_description = ["Handling", "Outbound Handling"]
+                df_pHandling = df_pHandling[(df_pHandling.Workday_Sales_Item_Name == "Handling") | (df_pHandling.Workday_Sales_Item_Name == "Outbound Handling") ]
+
+                handling_customer_names = df_pHandling.Customer.unique()
+                df_pHandling_customers_count = len(handling_customer_names)
 
                 q3_pHandling = np.percentile(df_pHandling.Rate.values, 75)
                 q1_pHandling = np.percentile(df_pHandling.Rate.values, 25)
@@ -1594,14 +1574,26 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
             st.markdown("##### Carton Picking and Shrink Wrap Rates")
             st.divider()
 
-            p3_Wrapping, p4_Cartons, = st.columns((1, 1))
+        except Exception as e:
+            st.markdown(f"##############  Data pulled for this Customer or Site does not have all the Columns needed "
+                        f"to display info ")
 
+        p3_Wrapping, p4_Cartons, = st.columns((1, 1))
 
+        try:
 
             # Shrink Wrap Box plot ######################################################
 
             with p3_Wrapping:
-                df_pWrapping = customer_rate_cards[customer_rate_cards.Description == "Shrink Wrap"]
+
+                df_pWrapping = customer_rate_cards[(customer_rate_cards.Rate < 15) & (customer_rate_cards.Rate > 1)]
+
+                wrapping_uom = ["P","PLT","PAL","Pallet","PALLET","O","C","ITEM"]
+                df_pWrapping = df_pWrapping[df_pWrapping.UnitOfMeasure.isin(wrapping_uom)]
+
+                p3_Wrapping_description = ["Wrapping", "Shrink/Stretchwrap"]
+                df_pWrapping = df_pWrapping[df_pWrapping.Workday_Sales_Item_Name.isin(p3_Wrapping_description) ]
+
                 df_pWrapping_customers_count = len(df_pWrapping)
                 wrapping_customer_names = df_pWrapping.Customer
 
@@ -1674,7 +1666,15 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
 
             with p4_Cartons:
                 ############################ Shrink Wrap Box plot ######################################################
-                df_pCarton = customer_rate_cards[customer_rate_cards.Description == "Carton Picking"]
+
+                df_pCarton = customer_rate_cards[(customer_rate_cards.Rate < 15) & (customer_rate_cards.Rate > 0)]
+
+                carton_uom = ["C","CTN","INNER","ITEM","OUTER",]
+                df_pCarton = df_pCarton[df_pCarton.UnitOfMeasure.isin(carton_uom)]
+
+                p4_Cartons_description = ["Case Picking", "Case Picking / Sorting"]
+                df_pCarton = df_pCarton[df_pCarton.Workday_Sales_Item_Name.isin(p4_Cartons_description) ]
+
                 df_pCarton_customers_count = len(df_pCarton)
                 picking_customer_names = df_pCarton.Customer
 
