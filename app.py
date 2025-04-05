@@ -65,9 +65,10 @@ def format_for_int(value):
 def proper_case(value):
     return value.title()
 
+
 def extract_short_name(value):
     firstname = value.split(" [")[0].lower().title()
-    if  " " in firstname :
+    if " " in firstname:
         second_name = firstname.split(" ")[1][:4].title()
     else:
         second_name = " "
@@ -75,7 +76,6 @@ def extract_short_name(value):
     firstname = firstname.split(" ")[0].title()
 
     return firstname + " " + second_name
-
 
 
 today = datetime.datetime.now()
@@ -193,7 +193,7 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
     #  Details Tab ###############################
 
     with (DetailsTab):
-        title_holder, cost_centres_selection = st.columns((1,3))
+        title_holder, cost_centres_selection = st.columns((1, 3))
 
         title_holder.subheader("Project Renaissance", divider="blue")
         selected_site = cost_centres_selection.multiselect("Site :", site_list, site_list[0])
@@ -987,7 +987,6 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
 
             invoice_rates["Calumo Description"] = invoice_rates.apply(sub_category_classification, axis=1)
 
-
             invoice_vols_by_Customer, invoice_rates_by_service = st.tabs(["📊 Customer Invoicing Detail",
                                                                           "🥇 Multi Customers Rates Per Service View",
                                                                           ])
@@ -1000,7 +999,7 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
                 cost_centres = invoice_rates.Cost_Center.unique()
 
                 with select_Option1:
-                    sel1, sel2, sel4b_service,sel3 = st.columns((3, 3,2, 1))
+                    sel1, sel2, sel4b_service, sel3 = st.columns((3, 3, 2, 1))
 
                     selected_cost_centre_sel1 = sel1.selectbox("Cost Centre :", cost_centres, index=0, key=544)
                     selected_workday_customers = invoice_rates[
@@ -1027,7 +1026,7 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
                     if display_rate == "UnitPrice":
                         selected_customer_pivot = pd.pivot_table(selected_customer,
                                                                  values=["Quantity", "LineAmount"],
-                                                                 index=["Revenue_Category",  "UnitOfMeasure",
+                                                                 index=["Revenue_Category", "UnitOfMeasure",
                                                                         "UnitPrice"],
                                                                  aggfunc="sum").reset_index()
                     else:
@@ -1038,12 +1037,12 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
                                                                  aggfunc="sum").reset_index()
 
                         selected_customer_pivot[
-                        "Avg Rate"] = selected_customer_pivot.LineAmount / selected_customer_pivot.Quantity
+                            "Avg Rate"] = selected_customer_pivot.LineAmount / selected_customer_pivot.Quantity
 
                     selected_customer_pivot.Revenue_Category = selected_customer_pivot.Revenue_Category.apply(
-                            proper_case)
+                        proper_case)
 
-                    selected_customer_pivot = selected_customer_pivot.sort_values(by=["Revenue_Category",display_rate],
+                    selected_customer_pivot = selected_customer_pivot.sort_values(by=["Revenue_Category", display_rate],
                                                                                   ascending=False)
 
                     col1, col2 = st.columns((2, 0.1))
@@ -1115,9 +1114,10 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
                     with skip3:
                         st.metric(label="Services", value=f"${ancillary_data:,.0f}",
                                   delta=f"{1 - filtered_data_contribution:,.0%} : of Revenue", border=False)
+
                 with select_Option2:
 
-                    sel1b, sel2b, sel4b_service, sel3b = st.columns((3, 3,2, 1))
+                    sel1b, sel2b, sel4b_service, sel3b = st.columns((3, 3, 2, 1))
 
                     selected_cost_centre_b = sel1b.selectbox("Cost Centre :", cost_centres, index=0, key=635)
                     selected_workday_customers_b = invoice_rates[
@@ -1144,10 +1144,10 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
 
                     if display_rate == "UnitPrice":
                         selected_customer_pivot_b = pd.pivot_table(selected_customer_b,
-                                                               values=["Quantity", "LineAmount"],
-                                                               index=["Revenue_Category", "UnitOfMeasure",
-                                                                      "UnitPrice"],
-                                                               aggfunc="sum").reset_index()
+                                                                   values=["Quantity", "LineAmount"],
+                                                                   index=["Revenue_Category", "UnitOfMeasure",
+                                                                          "UnitPrice"],
+                                                                   aggfunc="sum").reset_index()
                     else:
                         selected_customer_pivot_b = pd.pivot_table(selected_customer_b,
                                                                    values=["Quantity", "LineAmount"],
@@ -1158,11 +1158,11 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
                         "Avg Rate"] = selected_customer_pivot_b.LineAmount / selected_customer_pivot_b.Quantity
 
                     selected_customer_pivot_b.Revenue_Category = selected_customer_pivot_b.Revenue_Category.apply(
-                            proper_case)
+                        proper_case)
 
-                    selected_customer_pivot_b = selected_customer_pivot_b.sort_values(by=["Revenue_Category",display_rate],
-                                                                                  ascending=False)
-
+                    selected_customer_pivot_b = selected_customer_pivot_b.sort_values(
+                        by=["Revenue_Category", display_rate],
+                        ascending=False)
 
                     col1b, col2b = st.columns((2, 0.1))
 
@@ -1436,9 +1436,7 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
         # customer_rate_cards.Name =  customer_rate_cards.Name.apply(extract_short_name)
         # customer_rate_cards["Customer"] = customer_rate_cards["Name"]
 
-
         try:
-
 
             with p1_Storage:
                 df_pStorage = customer_rate_cards[customer_rate_cards.Description == "Storage"]
@@ -1596,8 +1594,6 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
 
             p3_Wrapping, p4_Cartons, = st.columns((1, 1))
 
-
-
             # Shrink Wrap Box plot ######################################################
 
             with p3_Wrapping:
@@ -1750,466 +1746,666 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
             st.markdown(f"##############  Data pulled for this Customer or Site does not have all the Columns needed "
                         f"to display info ")
 
-        st.subheader("", divider="rainbow")
+        # st.subheader("", divider="rainbow")
         st.text("")
         st.text("")
 
-        # with st.expander("Select Customer to Benchmark", expanded=False):
-        #     customer_list = rank_display_data.Name.unique()
-        #     st.subheader("Customer KPIs vs Site")
-        #     _bench1, _bench2, _bench3, = st.columns(3)
-        #     selected_customer = _bench2.selectbox("Select Customer", customer_list,
-        #                                           index=0, placeholder="Customer to Benchmark")
-        #
-        #     rank_display_data_benchmark = rank_display_data.loc[rank_display_data["Name"] == selected_customer]
-        #
-        #     site_benchmark = selected_cost_centre.split(" - ")[1].strip().title()
-        #
-        #     selected_site.append(str(site_benchmark))
-        #
-        #     site_benchmark_cc = selected_cost_centre.split(" AU")[0]
-        #
-        #     budget_data_2025_bench_mark = budget_data_2025_bench_mark.loc[
-        #         budget_data_2025_bench_mark.index == site_benchmark_cc]
-        #
-        #     _a, b1, b2, b3, _b = st.columns((1, 3, 3, 3, 1))
-        #
-        #     with b1:
-        #         rank_display_data_benchmark["Site Rev Per Pallet"] = budget_data_2025_bench_mark["Rev | Plt"].values
-        #
-        #         df = rank_display_data_benchmark[["Rev | Plt", "Site Rev Per Pallet"]]
-        #
-        #         # st.dataframe(rank_display_data_benchmark)
-        #
-        #         df = df.T
-        #         fig = make_subplots(rows=2, cols=2, shared_yaxes=False, column_widths=[100, 100],
-        #                             row_heights=[250, 250],
-        #                             horizontal_spacing=1, vertical_spacing=0, shared_xaxes=True
-        #                             )
-        #
-        #         fig.add_trace(
-        #             go.Bar(x=df.loc["Rev | Plt"], y=[f'{selected_customer}'], name="Rev | Pallet",
-        #                    orientation='h',
-        #                    text=df.loc["Rev | Plt"].map(format_for_float_currency),
-        #                    textfont=dict(color='white'),
-        #                    marker=dict(cornerradius=30), showlegend=False
-        #                    ), 1, 1
-        #         )
-        #
-        #         fig.add_trace(
-        #             go.Bar(x=df.loc["Site Rev Per Pallet"], y=[f'{site_benchmark}'], name="Site Rev Per Pallet",
-        #                    orientation='h',
-        #                    text=df.loc["Site Rev Per Pallet"].map(format_for_float_currency),
-        #                    textfont=dict(color='white'),
-        #                    marker=dict(cornerradius=30, color="#156082"), showlegend=False
-        #                    ), 2, 1,
-        #         )
-        #
-        #         fig.update_layout(height=250, width=600, title_text="Revenue Per Pallet vs Site",
-        #                           )
-        #
-        #         b1.plotly_chart(fig, use_container_width=True)
-        #
-        #     with b2:
-        #         rank_display_data_benchmark["Site Ebitda Per Pallet"] = budget_data_2025_bench_mark[
-        #             "EBITDA | Plt"].values
-        #
-        #         df = rank_display_data_benchmark[["EBITDA | Plt", "Site Ebitda Per Pallet"]]
-        #         df = df.T
-        #         fig = make_subplots(rows=2, cols=2, shared_yaxes=False, column_widths=[100, 100],
-        #                             row_heights=[250, 250],
-        #                             horizontal_spacing=1, vertical_spacing=0, shared_xaxes=True
-        #                             )
-        #
-        #         fig.add_trace(
-        #             go.Bar(x=df.loc["EBITDA | Plt"], y=[f'{selected_customer}'], name="Ebitda Per Pallet",
-        #                    orientation='h',
-        #                    text=df.loc["EBITDA | Plt"].map(format_for_float_currency),
-        #                    textfont=dict(color='white'),
-        #                    marker=dict(cornerradius=30), showlegend=False
-        #                    ), 1, 1
-        #         )
-        #
-        #         fig.add_trace(
-        #             go.Bar(x=df.loc["Site Ebitda Per Pallet"], y=[f'{site_benchmark}'], name="Site Ebitda Per Pallet",
-        #                    orientation='h',
-        #                    text=df.loc["Site Ebitda Per Pallet"].map(format_for_float_currency),
-        #                    textfont=dict(color='white'),
-        #                    marker=dict(cornerradius=30, color="#156082"), showlegend=False
-        #                    ), 2, 1,
-        #         )
-        #
-        #         fig.update_layout(height=250, width=600, title_text="EBITDA Per Pallet vs Site")
-        #
-        #         b2.plotly_chart(fig, use_container_width=True, key=455)
-        #
-        #     with b3:
-        #         rank_display_data_benchmark["Site Pallet Turns"] = budget_data_2025_bench_mark["Turn"].values
-        #
-        #         df = rank_display_data_benchmark[["Turn", "Site Pallet Turns"]]
-        #         df = df.T
-        #         fig = make_subplots(rows=2, cols=2, shared_yaxes=False, column_widths=[100, 100],
-        #                             row_heights=[250, 250],
-        #                             horizontal_spacing=1, vertical_spacing=0, shared_xaxes=True
-        #                             )
-        #
-        #         fig.add_trace(
-        #             go.Bar(x=df.loc["Turn"], y=[f'{selected_customer}'], name="Turn",
-        #                    orientation='h',
-        #                    text=df.loc["Turn"].map(format_for_float),
-        #                    textfont=dict(color='white'),
-        #                    marker=dict(cornerradius=30), showlegend=False
-        #                    ), 1, 1
-        #         )
-        #
-        #         fig.add_trace(
-        #             go.Bar(x=df.loc["Site Pallet Turns"], y=[f'{site_benchmark}'], name="Site Pallet Turn",
-        #                    orientation='h',
-        #                    text=df.loc["Site Pallet Turns"].map(format_for_float),
-        #                    textfont=dict(color='white'),
-        #                    marker=dict(cornerradius=30, color="#156082"), showlegend=False
-        #                    ), 2, 1,
-        #         )
-        #
-        #         fig.update_layout(height=250, width=600, title_text="Customer's Turn vs Site")
-        #
-        #         b3.plotly_chart(fig, use_container_width=True, key=593)
-        #
-        #     _c, c1, c2, _d = st.columns((1, 3, 3, 1))
-        #
-        #     with c1:
-        #         rank_display_data_benchmark["Site DL Per Pallet"] = budget_data_2025_bench_mark["DL %"].values
-        #
-        #         df = rank_display_data_benchmark[["DL ratio", "Site DL Per Pallet"]]
-        #         df = df.T
-        #         fig = make_subplots(rows=2, cols=2, shared_yaxes=False, column_widths=[100, 100],
-        #                             row_heights=[250, 250],
-        #                             horizontal_spacing=1, vertical_spacing=0, shared_xaxes=True
-        #                             )
-        #
-        #         fig.add_trace(
-        #             go.Bar(x=df.loc["DL ratio"], y=[f'{selected_customer}'], name="DL Ratio",
-        #                    orientation='h',
-        #                    text=df.loc["DL ratio"].map(format_for_percentage),
-        #                    textfont=dict(color='white'),
-        #                    marker=dict(cornerradius=30), showlegend=False
-        #                    ), 1, 1
-        #         )
-        #
-        #         fig.add_trace(
-        #             go.Bar(x=df.loc["Site DL Per Pallet"], y=[f'{site_benchmark}'], name="Site DL Per Pallet",
-        #                    orientation='h',
-        #                    text=df.loc["Site DL Per Pallet"].map(format_for_percentage),
-        #                    textfont=dict(color='white'),
-        #                    marker=dict(cornerradius=30, color="#156082"), showlegend=False
-        #                    ), 2, 1,
-        #         )
-        #
-        #         fig.update_layout(height=250, width=600, title_text="Customer DL Ratio vs Site")
-        #
-        #         b1.plotly_chart(fig, use_container_width=True, key=486)
-        #
-        #     with c2:
-        #         rank_display_data_benchmark["Site LTR"] = budget_data_2025_bench_mark["LTR %"].values
-        #
-        #         df = rank_display_data_benchmark[["LTR - %", "Site LTR"]]
-        #         df = df.T
-        #         fig = make_subplots(rows=2, cols=2, shared_yaxes=False, column_widths=[100, 100],
-        #                             row_heights=[250, 250],
-        #                             horizontal_spacing=1, vertical_spacing=0, shared_xaxes=True
-        #                             )
-        #
-        #         fig.add_trace(
-        #             go.Bar(x=df.loc["LTR - %"], y=[f'{selected_customer}'], name="LTR", orientation='h',
-        #                    text=df.loc["LTR - %"].map(format_for_percentage),
-        #                    textfont=dict(color='white'),
-        #                    marker=dict(cornerradius=30), showlegend=False
-        #                    ), 1, 1
-        #         )
-        #
-        #         fig.add_trace(
-        #             go.Bar(x=df.loc["Site LTR"], y=[f'{site_benchmark}'], name="LTR", orientation='h',
-        #                    text=df.loc["Site LTR"].map(format_for_percentage),
-        #                    textfont=dict(color='white'),
-        #                    marker=dict(cornerradius=30, color="#156082"), showlegend=False
-        #                    ), 2, 1,
-        #         )
-        #
-        #         fig.update_layout(height=250, width=600, title_text="Customer LTR vs Site")
-        #
-        #         b2.plotly_chart(fig, use_container_width=True, key=512)
+        st.subheader("Other Customer Rates at Site", divider="rainbow")
 
-        # with st.expander("Score Card | Customer Grading ", expanded=False):
-        #     st.subheader("Customers Score Card", divider='rainbow')
-        #
-        #     def1, wt1, def2 = st.columns(3)
-        #
-        #     with wt1:
-        #         revenue_per_pallet_weighting = st.number_input("Rev Per Pallet Weighting", value=20)
-        #         ebitda_pallet_weighting = st.number_input("Ebitda Per Pallet Weighting", value=40)
-        #         direct_labour_ratio_weighting = st.number_input("Direct Labour Ratio Weighting", value=20)
-        #         stock_turn_weighting = st.number_input("Stock Turn Weighting", value=20)
-        #         margin_weighting = st.number_input("Margin % Weighting", value=0)
-        #
-        #     def1.markdown(f"""
-        #             __Score Card Definitions__ \n
-        #             Score - assign a Performance metric based on Customer's KPIs relative to it's Contribution at site. \n
-        #
-        #             1. Identified KPIs and Their Weightings
-        #             First, identify the key performance indicators (KPIs) you want to use and assign a weight to each based on its importance. For example:
-        #             -	Revenue Per Pallet:...................{revenue_per_pallet_weighting}%
-        #             -	EBITDA Per Pallet:.....................{ebitda_pallet_weighting}%
-        #             -	Direct Labour Ratio:..................{direct_labour_ratio_weighting}%
-        #             -	Stock Turns:..............................{stock_turn_weighting}%
-        #             -	Margin:......................................{margin_weighting}%
-        #
-        #             Total Weighting :{revenue_per_pallet_weighting +
-        #                               +ebitda_pallet_weighting +
-        #                               stock_turn_weighting +
-        #                               direct_labour_ratio_weighting +
-        #                               margin_weighting}%
-        #
-        #             2. Normalize KPIs - (Scaling)
-        #             3. Calculate the Weighted Score
-        #
-        #         """)
-        #
-        #     def2.markdown("""
-        #             __Score Card Bands__ \n
-        #
-        #
-        #             |Band                  |    Call to Action                       |
-        #             |:---------------------|:------------------------------------|
-        #             |1.00 : High Risk      | Needs immediate review and action   |
-        #             |2.00 : Unsatisfactory | Identify areas of Improvement       |
-        #             |2.50 : Red Flag       | Future problem review now           |
-        #             |3.00 : Satisfactory   | Satisfactory to have Customer       |
-        #             |3.50 : Good           | Good to have Customer               |
-        #             |4.00 : Excellent      | Excellent to have Customer          |
-        #
-        #
-        #         """)
+        _, weeks_input, _ = st.columns((3, 1, 3))
 
-        # st.divider()
+        weeks_ago = weeks_input.number_input(f"Invoiced at Site - last 4 wks Dec 2024", value=4)
 
-        # with st.expander("Top 10 Customers - Activity Rank", expanded=False):
-        #
-        #     rank1, rank2, rank3 = st.columns((1, 4, 1))
-        #     with rank2:
-        #
-        #         rank_display_data["Stock Turn Times"] = (
-        #                 ((rank_display_data["TTP p.w."] / 2) * 52) / rank_display_data["Pallet"])
-        #
-        #         rank_display_data.insert(1, "Rev Rank",
-        #                                  rank_display_data[" Revenue"].rank(method='max', ascending=False))
-        #         rank_display_data.insert(2, "EBITDA", rank_display_data["EBITDA $"].rank(method='max', ascending=False))
-        #         rank_display_data.insert(3, "Rev | Pallet",
-        #                                  rank_display_data["Rev | Plt"].rank(method='max', ascending=False))
-        #         rank_display_data["EBITDA | Plt"] = rank_display_data["EBITDA | Plt"].rank(method='max',
-        #                                                                                    ascending=False)
-        #
-        #         rank_display_data["Margin %"] = rank_display_data["EBITDA %"]
-        #
-        #         rank_display_data["Pallets"] = rank_display_data["Pallet"].rank(method='max', ascending=False)
-        #         rank_display_data["TTP"] = rank_display_data["TTP p.w."].rank(method='max', ascending=False)
-        #         rank_display_data["Turns"] = rank_display_data["Stock Turn Times"].rank(method='max', ascending=False)
-        #
-        #
-        #         def calculate_score_card(df):
-        #
-        #             revenue_score = df["Rev | Plt"]
-        #             revenue_score_min = 0
-        #             revenue_score_max = df["Rev | Plt"].max()
-        #             normalised_revenue_score = (revenue_score - revenue_score_min) / (
-        #                     revenue_score_max - revenue_score_min)
-        #
-        #             ebitda_score = df["EBITDA | Plt"]
-        #             ebitda_score_min = 0
-        #             ebitda_score_max = df["EBITDA | Plt"].max()
-        #             normalised_ebitda_score = (ebitda_score - ebitda_score_min) / (ebitda_score_max - ebitda_score_min)
-        #
-        #             dl_ratio_score = df["LTR - %"]
-        #             dl_ratio_score_min = 0
-        #             dl_ratio_score_max = df["LTR - %"].max()
-        #             normalised_dl_ratio_score = (dl_ratio_score - dl_ratio_score_min
-        #                                          ) / (dl_ratio_score_max - dl_ratio_score_min)
-        #
-        #             turn_score = df["Turn"]
-        #             turn_score_min = 0
-        #             turn_score_max = df["Turn"].max()
-        #             normalised_turn_score = (turn_score - turn_score_min
-        #                                      ) / (turn_score_max - turn_score_min)
-        #
-        #             margin_score = df['EBITDA %']
-        #             margin_score_min = 0
-        #             margin_score_max = df['EBITDA %'].max()
-        #             normalised_pallet_score = (margin_score - margin_score_min
-        #                                        ) / (margin_score_max - margin_score_min)
-        #
-        #             final_score = (normalised_revenue_score * (revenue_per_pallet_weighting / 100)) + (
-        #                     normalised_ebitda_score * (ebitda_pallet_weighting / 100)) + (
-        #                                   normalised_pallet_score * (margin_weighting / 100)) + (
-        #                                   normalised_dl_ratio_score * (direct_labour_ratio_weighting / 100)) + (
-        #                                   normalised_turn_score * (stock_turn_weighting / 100))
-        #
-        #             df["Score"] = (final_score * 4) + 1
-        #
-        #             return df
-        #
-        #
-        #         calculate_score_card(rank_display_data)
-        #
-        #         rank_display_data["Score"] = [1 if y < 1000 else x for x, y in
-        #                                       zip(rank_display_data["Score"], rank_display_data["EBITDA $"])]
-        #
-        #
-        #         def assign_score_card(score):
-        #             if score >= 4:
-        #                 return "Excellent"
-        #             elif score >= 3.50:
-        #                 return "Good"
-        #             elif score >= 3.00:
-        #                 return "Satisfactory"
-        #             elif score >= 2.50:
-        #                 return "Red Flag"
-        #             elif score >= 2.00:
-        #                 return "Unsatisfactory"
-        #             else:
-        #                 return "High Risk"
-        #
-        #
-        #         rank_display_data["Score Card"] = rank_display_data["Score"].apply(assign_score_card)
-        #
-        #
-        #         def add_comment(score_card):
-        #             match score_card:
-        #                 case "High Risk":
-        #                     return "Needs immediate review and action"
-        #                 case "Unsatisfactory":
-        #                     return "Identify areas of Improvement"
-        #                 case "Red Flag":
-        #                     return "Future problem review now"
-        #                 case "Satisfactory":
-        #                     return "Satisfactory to have Customer"
-        #                 case "Good":
-        #                     return "Good to have Customer"
-        #                 case "Excellent":
-        #                     return "Excellent to have Customer"
-        #
-        #
-        #         rank_display_data["Comment"] = (rank_display_data["Score Card"].apply(add_comment))
-        #
-        #         # columns_to_hide = [" Revenue", 'EBITDAR $' , 'EBITDA $', 'EBITDA %',
-        #         #                    'Rev | Plt', 'sqm', 'Rent psqm', 'Storage Revenue, $',
-        #         #                    'Blast Freezing Revenue, $','EBITDAR %', 'Rent | Plt',
-        #         #                    'Pallet', 'TTP p.w.', 'Stock Turn Times', ]
-        #
-        #         rank_display_data = rank_display_data.style.hide(axis="index")
-        #         rank_display_data = rank_display_data.hide(
-        #             [" Revenue", 'EBITDA $', 'EBITDA %', 'Storage Revenue, $', 'Blast Freezing Revenue, $',
-        #              'Rev | Plt', 'Pallet', "RSB", "Services", 'EBITDAR $', 'Rent | Plt', 'EBITDAR %', 'Turn',
-        #              'TTP p.w.', 'sqm', 'Rent psqm', 'Stock Turn Times', "Rev psqm", "EBITDA psqm", 'Rank', "DL ratio",
-        #              "LTR - %", 'RSB Rev per OHP', 'Service Rev per TPP', 'Rent Expense,\n$'], axis="columns")
-        #
-        #         rank_display_data = rank_display_data.format({
-        #             "Rev Rank": '{0:,.0f}',
-        #             "EBITDA": '{0:,.0f}',
-        #             "Margin %": '{0:,.2%}',
-        #             "Rev | Pallet": '{0:,.0f}',
-        #             "EBITDA | Plt": '{0:,.0f}',
-        #             'Turns': '{0:,.0f}',
-        #             "Pallets": '{0:,.0f}',
-        #             "TTP": '{0:,.0f}',
-        #             "Score": '{0:,.2f}',
-        #         })
-        #
-        #         rank_display_data.background_gradient(subset=['Score'], cmap="RdYlGn")
-        #         # def assign_score_card():
-        #         #    score =   rank_display_data["Rev Rank"] +
-        #
-        #         rank_display_data = style_dataframe(rank_display_data)
-        #         rank_display_data = rank_display_data.map(highlight_negative_values)
-        #
-        #         rank2.write(rank_display_data.to_html(), unsafe_allow_html=True, use_container_width=True)
-        #
-        #         output1a = io.BytesIO()
-        #         with pd.ExcelWriter(output1a) as writer:
-        #             rank_display_data.to_excel(writer, sheet_name='export_data', index=False)
-        #
-        #         # Create a download button
-        #
-        #         st.text("")
-        #         st.text("")
-        #         st.download_button(
-        #             label="👆 Download ⤵️",
-        #             data=output1a,
-        #             file_name='customer_revenue.xlsx',
-        #             mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        #             key=1132,
-        #         )
+        changed_weeks_ago_date = date_three_weeks_ago(endDate, number_of_weeks=weeks_ago)
 
-        # st.divider()
+        default_3_weeks_ago_startDate = datetime.date(changed_weeks_ago_date.year, changed_weeks_ago_date.month,
+                                                      changed_weeks_ago_date.day)
 
-        # with st.expander("Revenue vs Profitability Contribution - Analysis "):
-        #
-        #     st.subheader(f'Revenue vs Profitability Contribution - Analysis : {selected_cost_centre}',
-        #                  divider='rainbow')
-        #
-        #     graph1, graph2 = st.columns(2)
-        #
-        #     customers = treemap_graph_data['Name']
-        #
-        #     color_columns = [" Revenue", 'EBITDA $',
-        #                      'EBITDA %',
-        #                      'Rev | Plt', 'EBITDA | Plt',
-        #                      'Pallet',
-        #                      'TTP p.w.']
-        #     # remark = select_CC_data['EBITDA Margin\n%']  # Replace with EBITDA per Pallet Through Put
-        #     # margin = select_CC_data['EBITDA Margin\n%']  # Replace with EBITDA per Pallet Through Put
-        #
-        #     with graph1:
-        #         graph1_size, graph1_color, space_holder_3, space_holder_4 = st.columns(4)
-        #
-        #         box_size_view = graph1_size.selectbox("Select Option for Box Size:", color_columns, key=1142, index=3)
-        #         box_color_view = graph1_color.selectbox("Select Option for Box Color:", color_columns, key=1143,
-        #                                                 index=4)
-        #
-        #         # Plotting HEAT MAP - tow Show Revenue and Profitability ############################
-        #
-        #         fig = px.treemap(treemap_graph_data,
-        #                          path=[customers],
-        #                          values=treemap_graph_data[box_size_view],
-        #                          color=treemap_graph_data[box_color_view],
-        #                          # color_continuous_scale=['#074F69', '#0C769E', '#61CBF3','#94DCF8',"#CAEDFB"]
-        #                          color_continuous_scale='RdYlGn'
-        #
-        #                          )
-        #
-        #         # fig.update_traces(root_color="red",)
-        #
-        #         st.plotly_chart(fig, filename='Chart.html')
-        #
-        #     with graph2:
-        #         treemap_graph_data = treemap_graph_data.filter(['Name', " Revenue", 'EBITDA $', 'EBITDA %',
-        #                                                         'Rev | Plt', 'EBITDA | Plt', 'Pallet',
-        #                                                         'TTP p.w.'])
-        #         # with st.expander("Filter Customer to Display"):
-        #         #     st.data_editor(treemap_graph_data, num_rows='dynamic')
-        #
-        #         # treemap_graph_data = treemap_graph_data[
-        #         #     (treemap_graph_data[box_size_view] & treemap_graph_data[box_color_view] )]
-        #         x_value = str(box_size_view)
-        #         y_value = str(box_color_view)
-        #
-        #         fig = px.scatter(treemap_graph_data, x=y_value,
-        #                          y=x_value,
-        #                          size=treemap_graph_data[" Revenue"],
-        #                          color="Name",
-        #                          hover_name="Name",
-        #                          text="Name",
-        #                          log_x=False,
-        #                          size_max=60)
-        #         st.plotly_chart(fig)
+        invoice_rates.Cost_Center = invoice_rates.Cost_Center.apply(extract_site)
+
+        site_list_rates = invoice_rates.Cost_Center.unique()
+
+        box_whisker_invoice_rates = invoice_rates[invoice_rates.InvoiceDate > str(default_3_weeks_ago_startDate)]
+
+
+        v1, service_view, v2 = st.columns(3)
+
+        last_cost_center = len(site_list_rates)-1
+
+        selected_site_rate_cards = v1.selectbox("Site Selection for Rate Cards :", site_list_rates, index=last_cost_center, key=1760)
+
+        st.text("")
+        st.text("")
+
+        box_whisker_invoice_rates = box_whisker_invoice_rates[
+            box_whisker_invoice_rates.Cost_Center == selected_site_rate_cards]
+
+        all_workday_Services = box_whisker_invoice_rates.Revenue_Category.unique()
+
+        last_service = len(all_workday_Services)-1
+
+        selected_service_view = service_view.selectbox("Site Selection for Rate Cards :", all_workday_Services, index=last_service,
+                                                       key=1778)
+
+        box_whisker_invoice_rates = box_whisker_invoice_rates[
+            box_whisker_invoice_rates.Revenue_Category == selected_service_view]
+
+        box_whisker_invoice_rates = pd.pivot_table(box_whisker_invoice_rates,
+                                                   values=["Quantity", "LineAmount"],
+                                                   index=["Revenue_Category", "UnitOfMeasure", "WorkdayCustomer_Name",
+                                                          "UnitPrice"],
+                                                   aggfunc="sum").reset_index()
+
+        # box_whisker_invoice_rates[
+        #     "Avg Rate"] = box_whisker_invoice_rates.LineAmount / box_whisker_invoice_rates.Quantity
+
+        box_whisker_invoice_rates[
+            "Avg Rate"] = box_whisker_invoice_rates.UnitPrice
+
+        p5_Others,_, p5_Table, = st.columns((2, 0.5, 2))
+
+        with p5_Others:
+
+            try:
+
+                display_box_customers = st.selectbox("Select Customers to View :", ["All", "Outliers Only"], index=0,
+                                                     key=1761)
+                st.text("")
+                st.text("")
+
+                ############################ Shrink Wrap Box plot ######################################################
+
+
+
+                df_pServiceView = box_whisker_invoice_rates[
+                    box_whisker_invoice_rates.Revenue_Category == selected_service_view]
+
+                all_workday_Services = df_pServiceView.Revenue_Category.unique()
+
+                all_unit_of_measures = df_pServiceView.UnitOfMeasure.unique()
+
+                select_UOM = v2.multiselect("Unit of Measure : ", all_unit_of_measures,
+                                            all_unit_of_measures, key=1906)
+
+                df_pServiceView = df_pServiceView[df_pServiceView.UnitOfMeasure.isin(select_UOM)]
+
+                df_pCarton_customers_count = len(df_pServiceView)
+                picking_customer_names = df_pServiceView.WorkdayCustomer_Name
+
+                q3_pCarton = np.percentile(df_pServiceView["Avg Rate"].values, 75)
+                q1_pCarton = np.percentile(df_pServiceView["Avg Rate"].values, 25)
+
+                # Add points with Labels
+                y = df_pServiceView["Avg Rate"].values
+                x = np.random.normal(1, 0.250, size=(len(y)))
+
+                positive_separator = 0.1
+                negative_separator = -0.2
+                y_axes_offset = 0
+                seperator = 0
+
+                # Create Box Plot Figure:
+                box_x_value = np.random.normal(1, 0.250, size=len(y))
+
+                # Create a Boxplot
+                fig = go.Figure()
+
+                fig.add_trace(go.Box(
+                    y=y,
+                    boxpoints='all',
+                    jitter=0.8,
+                    pointpos=0,
+                    name=f"{selected_service_view} Rates",
+                    line={"color": '#4D93D9'},
+                    marker={"size": 5, "color": 'red'},
+                ))
+
+                # Add annotations for each data point
+                for i, (val, customer) in enumerate(zip(y, picking_customer_names)):
+                    if display_box_customers == "Outliers Only":
+                        if float(y[i]) < q1_pCarton or float(y[i]) > q3_pCarton:
+                            seperator = negative_separator if seperator == positive_separator else positive_separator
+                            fig.add_annotation(
+                                x=float(x[i]),
+                                y=float(y[i]),
+                                showarrow=False,
+                                xshift=float(y[i]) + seperator,  # Adjust this value to position the labels horizontally
+                                hovertext=f'{customer.title()}, Rate:  {val}',
+                                text=f"{customer.title()}",
+                                font={"size": 13,
+                                      "color": 'black'}
+                            )
+
+                            fig.update_layout(
+                                title=dict(
+                                    text=f'{selected_site_rate_cards} : Customers ({df_pCarton_customers_count}) : {selected_service_view} Rates'),
+                                margin=dict(l=0, r=10, b=10, t=20))
+                    else:
+                        seperator = negative_separator if seperator == positive_separator else positive_separator
+                        fig.add_annotation(
+                            x=float(x[i]),
+                            y=float(y[i]),
+                            showarrow=False,
+                            xshift=float(y[i]) + seperator,  # Adjust this value to position the labels horizontally
+                            hovertext=f'{customer.title()}, Rate:  {val}',
+                            text=f"{customer.title()}",
+                            font={"size": 13,
+                                  "color": 'black'}
+                        )
+
+                        fig.update_layout(
+                            title=dict(
+                                text=f'{selected_site_rate_cards} : Customers ({df_pCarton_customers_count}) : {selected_service_view} Rates'),
+                            margin=dict(l=0, r=10, b=10, t=20))
+
+                p5_Others.plotly_chart(fig)
+
+            except Exception as e:
+                st.markdown('#### No Data ')
+
+        with p5_Table:
+
+            try:
+
+                selected_customer = df_pServiceView
+
+                display_rate = "UnitPrice"
+                if display_rate == "UnitPrice":
+                    selected_customer_pivot = pd.pivot_table(selected_customer,
+                                                             values=["Quantity", "LineAmount"],
+                                                             index=["WorkdayCustomer_Name", "UnitOfMeasure",
+                                                                    "UnitPrice"],
+                                                             aggfunc="sum").reset_index()
+                else:
+
+                    selected_customer_pivot = pd.pivot_table(selected_customer,
+                                                             values=["Quantity", "LineAmount"],
+                                                             index=["WorkdayCustomer_Name", "UnitOfMeasure", ],
+                                                             aggfunc="sum").reset_index()
+
+                    selected_customer_pivot[
+                        "Avg Rate"] = selected_customer_pivot.LineAmount / selected_customer_pivot.Quantity
+
+                selected_customer_pivot.WorkdayCustomer_Name = selected_customer_pivot.WorkdayCustomer_Name.apply(
+                    proper_case)
+
+                selected_customer_pivot = selected_customer_pivot.sort_values(by="WorkdayCustomer_Name",
+                                                                              ascending=True)
+
+                selected_customer_pivot_table = selected_customer_pivot.style.format({
+                    "LineAmount": "${0:,.2f}",
+                    "Quantity": "{0:,.0f}",
+                    "UnitPrice": "${0:,.2f}",
+                    "Avg Rate": "${0:,.2f}",
+                    "estimate_turn": "{0:,.1f}"
+                })
+
+                selected_customer_pivot_table = selected_customer_pivot_table.map(highlight_negative_values)
+
+                selected_customer_pivot_table = style_dataframe(selected_customer_pivot_table)
+                selected_customer_pivot_table = selected_customer_pivot_table.hide(axis="index")
+
+                st.write(selected_customer_pivot_table.to_html(), unsafe_allow_html=True)
+            except Exception as e:
+                st.markdown('#### No Data ')
+    st.subheader("", divider="rainbow")
+
+    # with st.expander("Select Customer to Benchmark", expanded=False):
+    #     customer_list = rank_display_data.Name.unique()
+    #     st.subheader("Customer KPIs vs Site")
+    #     _bench1, _bench2, _bench3, = st.columns(3)
+    #     selected_customer = _bench2.selectbox("Select Customer", customer_list,
+    #                                           index=0, placeholder="Customer to Benchmark")
+    #
+    #     rank_display_data_benchmark = rank_display_data.loc[rank_display_data["Name"] == selected_customer]
+    #
+    #     site_benchmark = selected_cost_centre.split(" - ")[1].strip().title()
+    #
+    #     selected_site.append(str(site_benchmark))
+    #
+    #     site_benchmark_cc = selected_cost_centre.split(" AU")[0]
+    #
+    #     budget_data_2025_bench_mark = budget_data_2025_bench_mark.loc[
+    #         budget_data_2025_bench_mark.index == site_benchmark_cc]
+    #
+    #     _a, b1, b2, b3, _b = st.columns((1, 3, 3, 3, 1))
+    #
+    #     with b1:
+    #         rank_display_data_benchmark["Site Rev Per Pallet"] = budget_data_2025_bench_mark["Rev | Plt"].values
+    #
+    #         df = rank_display_data_benchmark[["Rev | Plt", "Site Rev Per Pallet"]]
+    #
+    #         # st.dataframe(rank_display_data_benchmark)
+    #
+    #         df = df.T
+    #         fig = make_subplots(rows=2, cols=2, shared_yaxes=False, column_widths=[100, 100],
+    #                             row_heights=[250, 250],
+    #                             horizontal_spacing=1, vertical_spacing=0, shared_xaxes=True
+    #                             )
+    #
+    #         fig.add_trace(
+    #             go.Bar(x=df.loc["Rev | Plt"], y=[f'{selected_customer}'], name="Rev | Pallet",
+    #                    orientation='h',
+    #                    text=df.loc["Rev | Plt"].map(format_for_float_currency),
+    #                    textfont=dict(color='white'),
+    #                    marker=dict(cornerradius=30), showlegend=False
+    #                    ), 1, 1
+    #         )
+    #
+    #         fig.add_trace(
+    #             go.Bar(x=df.loc["Site Rev Per Pallet"], y=[f'{site_benchmark}'], name="Site Rev Per Pallet",
+    #                    orientation='h',
+    #                    text=df.loc["Site Rev Per Pallet"].map(format_for_float_currency),
+    #                    textfont=dict(color='white'),
+    #                    marker=dict(cornerradius=30, color="#156082"), showlegend=False
+    #                    ), 2, 1,
+    #         )
+    #
+    #         fig.update_layout(height=250, width=600, title_text="Revenue Per Pallet vs Site",
+    #                           )
+    #
+    #         b1.plotly_chart(fig, use_container_width=True)
+    #
+    #     with b2:
+    #         rank_display_data_benchmark["Site Ebitda Per Pallet"] = budget_data_2025_bench_mark[
+    #             "EBITDA | Plt"].values
+    #
+    #         df = rank_display_data_benchmark[["EBITDA | Plt", "Site Ebitda Per Pallet"]]
+    #         df = df.T
+    #         fig = make_subplots(rows=2, cols=2, shared_yaxes=False, column_widths=[100, 100],
+    #                             row_heights=[250, 250],
+    #                             horizontal_spacing=1, vertical_spacing=0, shared_xaxes=True
+    #                             )
+    #
+    #         fig.add_trace(
+    #             go.Bar(x=df.loc["EBITDA | Plt"], y=[f'{selected_customer}'], name="Ebitda Per Pallet",
+    #                    orientation='h',
+    #                    text=df.loc["EBITDA | Plt"].map(format_for_float_currency),
+    #                    textfont=dict(color='white'),
+    #                    marker=dict(cornerradius=30), showlegend=False
+    #                    ), 1, 1
+    #         )
+    #
+    #         fig.add_trace(
+    #             go.Bar(x=df.loc["Site Ebitda Per Pallet"], y=[f'{site_benchmark}'], name="Site Ebitda Per Pallet",
+    #                    orientation='h',
+    #                    text=df.loc["Site Ebitda Per Pallet"].map(format_for_float_currency),
+    #                    textfont=dict(color='white'),
+    #                    marker=dict(cornerradius=30, color="#156082"), showlegend=False
+    #                    ), 2, 1,
+    #         )
+    #
+    #         fig.update_layout(height=250, width=600, title_text="EBITDA Per Pallet vs Site")
+    #
+    #         b2.plotly_chart(fig, use_container_width=True, key=455)
+    #
+    #     with b3:
+    #         rank_display_data_benchmark["Site Pallet Turns"] = budget_data_2025_bench_mark["Turn"].values
+    #
+    #         df = rank_display_data_benchmark[["Turn", "Site Pallet Turns"]]
+    #         df = df.T
+    #         fig = make_subplots(rows=2, cols=2, shared_yaxes=False, column_widths=[100, 100],
+    #                             row_heights=[250, 250],
+    #                             horizontal_spacing=1, vertical_spacing=0, shared_xaxes=True
+    #                             )
+    #
+    #         fig.add_trace(
+    #             go.Bar(x=df.loc["Turn"], y=[f'{selected_customer}'], name="Turn",
+    #                    orientation='h',
+    #                    text=df.loc["Turn"].map(format_for_float),
+    #                    textfont=dict(color='white'),
+    #                    marker=dict(cornerradius=30), showlegend=False
+    #                    ), 1, 1
+    #         )
+    #
+    #         fig.add_trace(
+    #             go.Bar(x=df.loc["Site Pallet Turns"], y=[f'{site_benchmark}'], name="Site Pallet Turn",
+    #                    orientation='h',
+    #                    text=df.loc["Site Pallet Turns"].map(format_for_float),
+    #                    textfont=dict(color='white'),
+    #                    marker=dict(cornerradius=30, color="#156082"), showlegend=False
+    #                    ), 2, 1,
+    #         )
+    #
+    #         fig.update_layout(height=250, width=600, title_text="Customer's Turn vs Site")
+    #
+    #         b3.plotly_chart(fig, use_container_width=True, key=593)
+    #
+    #     _c, c1, c2, _d = st.columns((1, 3, 3, 1))
+    #
+    #     with c1:
+    #         rank_display_data_benchmark["Site DL Per Pallet"] = budget_data_2025_bench_mark["DL %"].values
+    #
+    #         df = rank_display_data_benchmark[["DL ratio", "Site DL Per Pallet"]]
+    #         df = df.T
+    #         fig = make_subplots(rows=2, cols=2, shared_yaxes=False, column_widths=[100, 100],
+    #                             row_heights=[250, 250],
+    #                             horizontal_spacing=1, vertical_spacing=0, shared_xaxes=True
+    #                             )
+    #
+    #         fig.add_trace(
+    #             go.Bar(x=df.loc["DL ratio"], y=[f'{selected_customer}'], name="DL Ratio",
+    #                    orientation='h',
+    #                    text=df.loc["DL ratio"].map(format_for_percentage),
+    #                    textfont=dict(color='white'),
+    #                    marker=dict(cornerradius=30), showlegend=False
+    #                    ), 1, 1
+    #         )
+    #
+    #         fig.add_trace(
+    #             go.Bar(x=df.loc["Site DL Per Pallet"], y=[f'{site_benchmark}'], name="Site DL Per Pallet",
+    #                    orientation='h',
+    #                    text=df.loc["Site DL Per Pallet"].map(format_for_percentage),
+    #                    textfont=dict(color='white'),
+    #                    marker=dict(cornerradius=30, color="#156082"), showlegend=False
+    #                    ), 2, 1,
+    #         )
+    #
+    #         fig.update_layout(height=250, width=600, title_text="Customer DL Ratio vs Site")
+    #
+    #         b1.plotly_chart(fig, use_container_width=True, key=486)
+    #
+    #     with c2:
+    #         rank_display_data_benchmark["Site LTR"] = budget_data_2025_bench_mark["LTR %"].values
+    #
+    #         df = rank_display_data_benchmark[["LTR - %", "Site LTR"]]
+    #         df = df.T
+    #         fig = make_subplots(rows=2, cols=2, shared_yaxes=False, column_widths=[100, 100],
+    #                             row_heights=[250, 250],
+    #                             horizontal_spacing=1, vertical_spacing=0, shared_xaxes=True
+    #                             )
+    #
+    #         fig.add_trace(
+    #             go.Bar(x=df.loc["LTR - %"], y=[f'{selected_customer}'], name="LTR", orientation='h',
+    #                    text=df.loc["LTR - %"].map(format_for_percentage),
+    #                    textfont=dict(color='white'),
+    #                    marker=dict(cornerradius=30), showlegend=False
+    #                    ), 1, 1
+    #         )
+    #
+    #         fig.add_trace(
+    #             go.Bar(x=df.loc["Site LTR"], y=[f'{site_benchmark}'], name="LTR", orientation='h',
+    #                    text=df.loc["Site LTR"].map(format_for_percentage),
+    #                    textfont=dict(color='white'),
+    #                    marker=dict(cornerradius=30, color="#156082"), showlegend=False
+    #                    ), 2, 1,
+    #         )
+    #
+    #         fig.update_layout(height=250, width=600, title_text="Customer LTR vs Site")
+    #
+    #         b2.plotly_chart(fig, use_container_width=True, key=512)
+
+    # with st.expander("Score Card | Customer Grading ", expanded=False):
+    #     st.subheader("Customers Score Card", divider='rainbow')
+    #
+    #     def1, wt1, def2 = st.columns(3)
+    #
+    #     with wt1:
+    #         revenue_per_pallet_weighting = st.number_input("Rev Per Pallet Weighting", value=20)
+    #         ebitda_pallet_weighting = st.number_input("Ebitda Per Pallet Weighting", value=40)
+    #         direct_labour_ratio_weighting = st.number_input("Direct Labour Ratio Weighting", value=20)
+    #         stock_turn_weighting = st.number_input("Stock Turn Weighting", value=20)
+    #         margin_weighting = st.number_input("Margin % Weighting", value=0)
+    #
+    #     def1.markdown(f"""
+    #             __Score Card Definitions__ \n
+    #             Score - assign a Performance metric based on Customer's KPIs relative to it's Contribution at site. \n
+    #
+    #             1. Identified KPIs and Their Weightings
+    #             First, identify the key performance indicators (KPIs) you want to use and assign a weight to each based on its importance. For example:
+    #             -	Revenue Per Pallet:...................{revenue_per_pallet_weighting}%
+    #             -	EBITDA Per Pallet:.....................{ebitda_pallet_weighting}%
+    #             -	Direct Labour Ratio:..................{direct_labour_ratio_weighting}%
+    #             -	Stock Turns:..............................{stock_turn_weighting}%
+    #             -	Margin:......................................{margin_weighting}%
+    #
+    #             Total Weighting :{revenue_per_pallet_weighting +
+    #                               +ebitda_pallet_weighting +
+    #                               stock_turn_weighting +
+    #                               direct_labour_ratio_weighting +
+    #                               margin_weighting}%
+    #
+    #             2. Normalize KPIs - (Scaling)
+    #             3. Calculate the Weighted Score
+    #
+    #         """)
+    #
+    #     def2.markdown("""
+    #             __Score Card Bands__ \n
+    #
+    #
+    #             |Band                  |    Call to Action                       |
+    #             |:---------------------|:------------------------------------|
+    #             |1.00 : High Risk      | Needs immediate review and action   |
+    #             |2.00 : Unsatisfactory | Identify areas of Improvement       |
+    #             |2.50 : Red Flag       | Future problem review now           |
+    #             |3.00 : Satisfactory   | Satisfactory to have Customer       |
+    #             |3.50 : Good           | Good to have Customer               |
+    #             |4.00 : Excellent      | Excellent to have Customer          |
+    #
+    #
+    #         """)
+
+    # st.divider()
+
+    # with st.expander("Top 10 Customers - Activity Rank", expanded=False):
+    #
+    #     rank1, rank2, rank3 = st.columns((1, 4, 1))
+    #     with rank2:
+    #
+    #         rank_display_data["Stock Turn Times"] = (
+    #                 ((rank_display_data["TTP p.w."] / 2) * 52) / rank_display_data["Pallet"])
+    #
+    #         rank_display_data.insert(1, "Rev Rank",
+    #                                  rank_display_data[" Revenue"].rank(method='max', ascending=False))
+    #         rank_display_data.insert(2, "EBITDA", rank_display_data["EBITDA $"].rank(method='max', ascending=False))
+    #         rank_display_data.insert(3, "Rev | Pallet",
+    #                                  rank_display_data["Rev | Plt"].rank(method='max', ascending=False))
+    #         rank_display_data["EBITDA | Plt"] = rank_display_data["EBITDA | Plt"].rank(method='max',
+    #                                                                                    ascending=False)
+    #
+    #         rank_display_data["Margin %"] = rank_display_data["EBITDA %"]
+    #
+    #         rank_display_data["Pallets"] = rank_display_data["Pallet"].rank(method='max', ascending=False)
+    #         rank_display_data["TTP"] = rank_display_data["TTP p.w."].rank(method='max', ascending=False)
+    #         rank_display_data["Turns"] = rank_display_data["Stock Turn Times"].rank(method='max', ascending=False)
+    #
+    #
+    #         def calculate_score_card(df):
+    #
+    #             revenue_score = df["Rev | Plt"]
+    #             revenue_score_min = 0
+    #             revenue_score_max = df["Rev | Plt"].max()
+    #             normalised_revenue_score = (revenue_score - revenue_score_min) / (
+    #                     revenue_score_max - revenue_score_min)
+    #
+    #             ebitda_score = df["EBITDA | Plt"]
+    #             ebitda_score_min = 0
+    #             ebitda_score_max = df["EBITDA | Plt"].max()
+    #             normalised_ebitda_score = (ebitda_score - ebitda_score_min) / (ebitda_score_max - ebitda_score_min)
+    #
+    #             dl_ratio_score = df["LTR - %"]
+    #             dl_ratio_score_min = 0
+    #             dl_ratio_score_max = df["LTR - %"].max()
+    #             normalised_dl_ratio_score = (dl_ratio_score - dl_ratio_score_min
+    #                                          ) / (dl_ratio_score_max - dl_ratio_score_min)
+    #
+    #             turn_score = df["Turn"]
+    #             turn_score_min = 0
+    #             turn_score_max = df["Turn"].max()
+    #             normalised_turn_score = (turn_score - turn_score_min
+    #                                      ) / (turn_score_max - turn_score_min)
+    #
+    #             margin_score = df['EBITDA %']
+    #             margin_score_min = 0
+    #             margin_score_max = df['EBITDA %'].max()
+    #             normalised_pallet_score = (margin_score - margin_score_min
+    #                                        ) / (margin_score_max - margin_score_min)
+    #
+    #             final_score = (normalised_revenue_score * (revenue_per_pallet_weighting / 100)) + (
+    #                     normalised_ebitda_score * (ebitda_pallet_weighting / 100)) + (
+    #                                   normalised_pallet_score * (margin_weighting / 100)) + (
+    #                                   normalised_dl_ratio_score * (direct_labour_ratio_weighting / 100)) + (
+    #                                   normalised_turn_score * (stock_turn_weighting / 100))
+    #
+    #             df["Score"] = (final_score * 4) + 1
+    #
+    #             return df
+    #
+    #
+    #         calculate_score_card(rank_display_data)
+    #
+    #         rank_display_data["Score"] = [1 if y < 1000 else x for x, y in
+    #                                       zip(rank_display_data["Score"], rank_display_data["EBITDA $"])]
+    #
+    #
+    #         def assign_score_card(score):
+    #             if score >= 4:
+    #                 return "Excellent"
+    #             elif score >= 3.50:
+    #                 return "Good"
+    #             elif score >= 3.00:
+    #                 return "Satisfactory"
+    #             elif score >= 2.50:
+    #                 return "Red Flag"
+    #             elif score >= 2.00:
+    #                 return "Unsatisfactory"
+    #             else:
+    #                 return "High Risk"
+    #
+    #
+    #         rank_display_data["Score Card"] = rank_display_data["Score"].apply(assign_score_card)
+    #
+    #
+    #         def add_comment(score_card):
+    #             match score_card:
+    #                 case "High Risk":
+    #                     return "Needs immediate review and action"
+    #                 case "Unsatisfactory":
+    #                     return "Identify areas of Improvement"
+    #                 case "Red Flag":
+    #                     return "Future problem review now"
+    #                 case "Satisfactory":
+    #                     return "Satisfactory to have Customer"
+    #                 case "Good":
+    #                     return "Good to have Customer"
+    #                 case "Excellent":
+    #                     return "Excellent to have Customer"
+    #
+    #
+    #         rank_display_data["Comment"] = (rank_display_data["Score Card"].apply(add_comment))
+    #
+    #         # columns_to_hide = [" Revenue", 'EBITDAR $' , 'EBITDA $', 'EBITDA %',
+    #         #                    'Rev | Plt', 'sqm', 'Rent psqm', 'Storage Revenue, $',
+    #         #                    'Blast Freezing Revenue, $','EBITDAR %', 'Rent | Plt',
+    #         #                    'Pallet', 'TTP p.w.', 'Stock Turn Times', ]
+    #
+    #         rank_display_data = rank_display_data.style.hide(axis="index")
+    #         rank_display_data = rank_display_data.hide(
+    #             [" Revenue", 'EBITDA $', 'EBITDA %', 'Storage Revenue, $', 'Blast Freezing Revenue, $',
+    #              'Rev | Plt', 'Pallet', "RSB", "Services", 'EBITDAR $', 'Rent | Plt', 'EBITDAR %', 'Turn',
+    #              'TTP p.w.', 'sqm', 'Rent psqm', 'Stock Turn Times', "Rev psqm", "EBITDA psqm", 'Rank', "DL ratio",
+    #              "LTR - %", 'RSB Rev per OHP', 'Service Rev per TPP', 'Rent Expense,\n$'], axis="columns")
+    #
+    #         rank_display_data = rank_display_data.format({
+    #             "Rev Rank": '{0:,.0f}',
+    #             "EBITDA": '{0:,.0f}',
+    #             "Margin %": '{0:,.2%}',
+    #             "Rev | Pallet": '{0:,.0f}',
+    #             "EBITDA | Plt": '{0:,.0f}',
+    #             'Turns': '{0:,.0f}',
+    #             "Pallets": '{0:,.0f}',
+    #             "TTP": '{0:,.0f}',
+    #             "Score": '{0:,.2f}',
+    #         })
+    #
+    #         rank_display_data.background_gradient(subset=['Score'], cmap="RdYlGn")
+    #         # def assign_score_card():
+    #         #    score =   rank_display_data["Rev Rank"] +
+    #
+    #         rank_display_data = style_dataframe(rank_display_data)
+    #         rank_display_data = rank_display_data.map(highlight_negative_values)
+    #
+    #         rank2.write(rank_display_data.to_html(), unsafe_allow_html=True, use_container_width=True)
+    #
+    #         output1a = io.BytesIO()
+    #         with pd.ExcelWriter(output1a) as writer:
+    #             rank_display_data.to_excel(writer, sheet_name='export_data', index=False)
+    #
+    #         # Create a download button
+    #
+    #         st.text("")
+    #         st.text("")
+    #         st.download_button(
+    #             label="👆 Download ⤵️",
+    #             data=output1a,
+    #             file_name='customer_revenue.xlsx',
+    #             mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    #             key=1132,
+    #         )
+
+    # st.divider()
+
+    # with st.expander("Revenue vs Profitability Contribution - Analysis "):
+    #
+    #     st.subheader(f'Revenue vs Profitability Contribution - Analysis : {selected_cost_centre}',
+    #                  divider='rainbow')
+    #
+    #     graph1, graph2 = st.columns(2)
+    #
+    #     customers = treemap_graph_data['Name']
+    #
+    #     color_columns = [" Revenue", 'EBITDA $',
+    #                      'EBITDA %',
+    #                      'Rev | Plt', 'EBITDA | Plt',
+    #                      'Pallet',
+    #                      'TTP p.w.']
+    #     # remark = select_CC_data['EBITDA Margin\n%']  # Replace with EBITDA per Pallet Through Put
+    #     # margin = select_CC_data['EBITDA Margin\n%']  # Replace with EBITDA per Pallet Through Put
+    #
+    #     with graph1:
+    #         graph1_size, graph1_color, space_holder_3, space_holder_4 = st.columns(4)
+    #
+    #         box_size_view = graph1_size.selectbox("Select Option for Box Size:", color_columns, key=1142, index=3)
+    #         box_color_view = graph1_color.selectbox("Select Option for Box Color:", color_columns, key=1143,
+    #                                                 index=4)
+    #
+    #         # Plotting HEAT MAP - tow Show Revenue and Profitability ############################
+    #
+    #         fig = px.treemap(treemap_graph_data,
+    #                          path=[customers],
+    #                          values=treemap_graph_data[box_size_view],
+    #                          color=treemap_graph_data[box_color_view],
+    #                          # color_continuous_scale=['#074F69', '#0C769E', '#61CBF3','#94DCF8',"#CAEDFB"]
+    #                          color_continuous_scale='RdYlGn'
+    #
+    #                          )
+    #
+    #         # fig.update_traces(root_color="red",)
+    #
+    #         st.plotly_chart(fig, filename='Chart.html')
+    #
+    #     with graph2:
+    #         treemap_graph_data = treemap_graph_data.filter(['Name', " Revenue", 'EBITDA $', 'EBITDA %',
+    #                                                         'Rev | Plt', 'EBITDA | Plt', 'Pallet',
+    #                                                         'TTP p.w.'])
+    #         # with st.expander("Filter Customer to Display"):
+    #         #     st.data_editor(treemap_graph_data, num_rows='dynamic')
+    #
+    #         # treemap_graph_data = treemap_graph_data[
+    #         #     (treemap_graph_data[box_size_view] & treemap_graph_data[box_color_view] )]
+    #         x_value = str(box_size_view)
+    #         y_value = str(box_color_view)
+    #
+    #         fig = px.scatter(treemap_graph_data, x=y_value,
+    #                          y=x_value,
+    #                          size=treemap_graph_data[" Revenue"],
+    #                          color="Name",
+    #                          hover_name="Name",
+    #                          text="Name",
+    #                          log_x=False,
+    #                          size_max=60)
+    #         st.plotly_chart(fig)
 
     # with SiteTab:
     #     ############################### Side for Uploading excel File ###############################
