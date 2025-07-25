@@ -954,7 +954,7 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
                 st.text("")
                 st.text("")
 
-        with st.expander("Customer Invoicing Comparison - Raw SWMS Invoicing Data for 2024", expanded=True):
+        with st.expander(f"Customer Invoicing Comparison - Raw SWMS Invoicing Data for 12 Months", expanded=True):
 
             ############################### Side for Uploading excel File ###############################
 
@@ -1397,8 +1397,6 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
 
         #     ###############################  Box Plots Over and under Indexed Customers  ###############################
 
-        site_list_rates = customer_rate_cards.Site.unique()
-
         # _,weeks_input, _ = st.columns((3, 1, 3))
         #
         # weeks_ago = weeks_input.number_input(f"Invoiced at Site - in December 2024", value=4)
@@ -1410,14 +1408,22 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
         #
         # invoice_rates.Cost_Center = invoice_rates.Cost_Center.apply(extract_site)
         #
-        # site_list_rates = invoice_rates.Cost_Center.unique()
+        # plot_site_list_rates = customer_rate_cards.Site.unique()
         #
         # box_whisker_invoice_rates = invoice_rates[invoice_rates.InvoiceDate > str(default_3_weeks_ago_startDate)]
 
-        v1, v2 = st.columns(2)
+        v1, v2, plot_UOM = st.columns((1, 1, 3))
+
+        site_list_rates = customer_rate_cards.Site.unique()
+        plots_unit_of_measure = customer_rate_cards.Prop.unique()
 
         selected_site_rate_cards = v1.selectbox("Site Selection for Rate Cards :", site_list_rates, index=0)
         display_box_customers = v2.selectbox("Select Customers to View :", ["All", "Outliers Only"], index=0)
+        selected_Plot_UOM = plot_UOM.multiselect("Unit of Measure : ", plots_unit_of_measure,
+                                                 plots_unit_of_measure, key=1426)
+
+        customer_rate_cards = customer_rate_cards[customer_rate_cards.Prop.isin(selected_Plot_UOM)]
+
         st.text("")
         st.text("")
 
@@ -1436,6 +1442,7 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
         # customer_rate_cards.Name =  customer_rate_cards.Name.apply(extract_short_name)
         # customer_rate_cards["Customer"] = customer_rate_cards["Name"]
 
+        print(customer_rate_cards[customer_rate_cards.Description == "Storage"])
         try:
 
             with p1_Storage:
@@ -1475,6 +1482,11 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
 
                 # Add annotations for each data point. to recheck
                 for i, (val, customer) in enumerate(zip(y, customer_names)):
+                    # if len(customer.title()) > 9:
+                    #     customerName = f'{customer.title()[:9] + '...'}',
+                    # else:
+                    #     customerName = f'{customer.title()[:9] + '...'}'
+
                     if display_box_customers == "Outliers Only":
                         if float(y[i]) < q1_pStorage or float(y[i]) > q3_pStorage:
                             seperator = negative_separator if seperator == positive_separator else positive_separator
@@ -1484,7 +1496,7 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
                                 showarrow=False,
                                 xshift=float(y[i]) + seperator,  # Adjust this value to position the labels horizontally
                                 hovertext=f'{customer}, Rate:  {val}',
-                                text=f"{customer}",
+                                text=f'{customer.title()[:9] + '...'}',
                                 font={"size": 13,
                                       "color": 'black'})
 
@@ -1501,7 +1513,7 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
                             showarrow=False,
                             xshift=float(y[i]) + seperator,  # Adjust this value to position the labels horizontally
                             hovertext=f'{customer}, Rate:  {val}',
-                            text=f"{customer}",
+                            text=f'{customer.title()[:7] + '...'}',
                             font={"size": 13,
                                   "color": 'black'})
 
@@ -1549,6 +1561,7 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
 
                 # Add annotations for each data point
                 for i, (val, customer) in enumerate(zip(y, handling_customer_names)):
+
                     if display_box_customers == "Outliers Only":
                         if float(y[i]) < q1_pHandling or float(y[i]) > q3_pHandling:
                             seperator = negative_separator if seperator == positive_separator else positive_separator
@@ -1558,7 +1571,7 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
                                 showarrow=False,
                                 xshift=float(y[i]) + seperator,  # Adjust this value to position the labels horizontally
                                 hovertext=f'{customer}, Rate:  {val}',
-                                text=f"{customer}",
+                                text=f'{customer.title()[:7] + '...'}',
                                 font={"size": 13,
                                       "color": 'black'}
                             )
@@ -1569,6 +1582,8 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
                                 margin=dict(l=0, r=10, b=10, t=30)
                             )
                     else:
+                        shortName = [customer.title()[:9] + '...' if len(customer.title()) > 10 else customer.title() for
+                                     cus in customer]
                         seperator = negative_separator if seperator == positive_separator else positive_separator
                         fig.add_annotation(
                             x=float(x[i]),
@@ -1576,7 +1591,7 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
                             showarrow=False,
                             xshift=float(y[i]) + seperator,  # Adjust this value to position the labels horizontally
                             hovertext=f'{customer}, Rate:  {val}',
-                            text=f"{customer}",
+                            text=f'{customer.title()[:7] + '...'}',
                             font={"size": 13,
                                   "color": 'black'})
 
@@ -1631,6 +1646,7 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
 
                 # Add annotations for each data point
                 for i, (val, customer) in enumerate(zip(y, wrapping_customer_names)):
+
                     if display_box_customers == "Outliers Only":
                         if float(y[i]) < q1_pWrapping or float(y[i]) > q3_pWrapping:
                             seperator = negative_separator if seperator == positive_separator else positive_separator
@@ -1640,7 +1656,7 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
                                 showarrow=False,
                                 xshift=float(y[i]) + seperator,  # Adjust this value to position the labels horizontally
                                 hovertext=f'{customer}, Rate:  {val}',
-                                text=f"{customer}",
+                                text=f'{customer.title()[:7] + '...'}',
                                 font={"size": 13,
                                       "color": 'black'}
                             )
@@ -1657,7 +1673,7 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
                             showarrow=False,
                             xshift=float(y[i]) + seperator,  # Adjust this value to position the labels horizontally
                             hovertext=f'{customer}, Rate:  {val}',
-                            text=f"{customer}",
+                            text=f'{customer.title()[:7] + '...'}',
                             font={"size": 13,
                                   "color": 'black'})
 
@@ -1704,6 +1720,7 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
 
                 # Add annotations for each data point
                 for i, (val, customer) in enumerate(zip(y, picking_customer_names)):
+
                     if display_box_customers == "Outliers Only":
                         if float(y[i]) < q1_pCarton or float(y[i]) > q3_pCarton:
                             seperator = negative_separator if seperator == positive_separator else positive_separator
@@ -1713,7 +1730,7 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
                                 showarrow=False,
                                 xshift=float(y[i]) + seperator,  # Adjust this value to position the labels horizontally
                                 hovertext=f'{customer}, Rate:  {val}',
-                                text=f"{customer}",
+                                text=f'{customer.title()[:7] + '...'}',
                                 font={"size": 13,
                                       "color": 'black'}
                             )
@@ -1730,7 +1747,7 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
                             showarrow=False,
                             xshift=float(y[i]) + seperator,  # Adjust this value to position the labels horizontally
                             hovertext=f'{customer}, Rate:  {val}',
-                            text=f"{customer}",
+                            text=f'{customer.title()[:7] + '...'}',
                             font={"size": 13,
                                   "color": 'black'}
                         )
@@ -1750,11 +1767,11 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
         st.text("")
         st.text("")
 
-        st.subheader("Other Customer Rates at Site", divider="rainbow")
+        st.subheader("Other Customer Rates Analysis Invoiced at Site ", divider="rainbow")
 
-        _, weeks_input, _ = st.columns((3, 1, 3))
+        _, weeks_input, _ = st.columns((4, 1, 4))
 
-        weeks_ago = weeks_input.number_input(f"Invoiced at Site - last 4 wks Dec 2024", value=4)
+        weeks_ago = weeks_input.number_input(f"Last 4 wks ending {endDate} ", value=4)
 
         changed_weeks_ago_date = date_three_weeks_ago(endDate, number_of_weeks=weeks_ago)
 
@@ -1767,12 +1784,12 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
 
         box_whisker_invoice_rates = invoice_rates[invoice_rates.InvoiceDate > str(default_3_weeks_ago_startDate)]
 
-
         v1, service_view, v2 = st.columns(3)
 
-        last_cost_center = len(site_list_rates)-1
+        last_cost_center = len(site_list_rates) - 1
 
-        selected_site_rate_cards = v1.selectbox("Site Selection for Rate Cards :", site_list_rates, index=last_cost_center, key=1760)
+        selected_site_rate_cards = v1.selectbox("Site Selection for Rate Cards :", site_list_rates,
+                                                index=last_cost_center, key=1760)
 
         st.text("")
         st.text("")
@@ -1782,9 +1799,10 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
 
         all_workday_Services = box_whisker_invoice_rates.Revenue_Category.unique()
 
-        last_service = len(all_workday_Services)-1
+        last_service = len(all_workday_Services) - 1
 
-        selected_service_view = service_view.selectbox("Site Selection for Rate Cards :", all_workday_Services, index=last_service,
+        selected_service_view = service_view.selectbox("Site Selection for Rate Cards :", all_workday_Services,
+                                                       index=last_service,
                                                        key=1778)
 
         box_whisker_invoice_rates = box_whisker_invoice_rates[
@@ -1802,7 +1820,7 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
         box_whisker_invoice_rates[
             "Avg Rate"] = box_whisker_invoice_rates.UnitPrice
 
-        p5_Others,_, p5_Table, = st.columns((2, 0.5, 2))
+        p5_Others, _, p5_Table, = st.columns((2, 0.5, 2))
 
         with p5_Others:
 
@@ -1814,8 +1832,6 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
                 st.text("")
 
                 ############################ Shrink Wrap Box plot ######################################################
-
-
 
                 df_pServiceView = box_whisker_invoice_rates[
                     box_whisker_invoice_rates.Revenue_Category == selected_service_view]
@@ -1862,6 +1878,8 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
 
                 # Add annotations for each data point
                 for i, (val, customer) in enumerate(zip(y, picking_customer_names)):
+                    shortName = [customer.title()[:9] + '...' if len(customer.title()) > 10 else customer.title() for
+                                 cus in customer]
                     if display_box_customers == "Outliers Only":
                         if float(y[i]) < q1_pCarton or float(y[i]) > q3_pCarton:
                             seperator = negative_separator if seperator == positive_separator else positive_separator
@@ -1871,7 +1889,7 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
                                 showarrow=False,
                                 xshift=float(y[i]) + seperator,  # Adjust this value to position the labels horizontally
                                 hovertext=f'{customer.title()}, Rate:  {val}',
-                                text=f"{customer.title()}",
+                                text=f"{shortName[i]} + 5 ",
                                 font={"size": 13,
                                       "color": 'black'}
                             )
@@ -1888,7 +1906,7 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
                             showarrow=False,
                             xshift=float(y[i]) + seperator,  # Adjust this value to position the labels horizontally
                             hovertext=f'{customer.title()}, Rate:  {val}',
-                            text=f"{customer.title()}",
+                            text=f"{shortName[i]}",
                             font={"size": 13,
                                   "color": 'black'}
                         )
