@@ -1415,7 +1415,8 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
         v1, v2, plot_UOM = st.columns((1, 1, 3))
 
         site_list_rates = customer_rate_cards.Site.unique()
-        plots_unit_of_measure = customer_rate_cards.Prop.unique()
+        plots_unit_of_measure = sorted(customer_rate_cards.Prop.unique())
+
 
         selected_site_rate_cards = v1.selectbox("Site Selection for Rate Cards :", site_list_rates, index=0)
         display_box_customers = v2.selectbox("Select Customers to View :", ["All", "Outliers Only"], index=0)
@@ -1442,7 +1443,6 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
         # customer_rate_cards.Name =  customer_rate_cards.Name.apply(extract_short_name)
         # customer_rate_cards["Customer"] = customer_rate_cards["Name"]
 
-        print(customer_rate_cards[customer_rate_cards.Description == "Storage"])
         try:
 
             with p1_Storage:
