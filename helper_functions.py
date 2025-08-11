@@ -87,7 +87,7 @@ def sub_category_classification(dtframe):
 
 @st.cache_data
 def load_profitbility_Summary_model(uploaded_file):
-    customer_profitability_summary = pd.read_excel(uploaded_file, sheet_name="ChartData", header=5, usecols="B:BM")
+    customer_profitability_summary = pd.read_excel(uploaded_file, sheet_name="ChartData", header=5, usecols="B:BN")
     customer_profitability_summary = customer_profitability_summary[customer_profitability_summary[" Revenue"] > 0]
     return customer_profitability_summary
 

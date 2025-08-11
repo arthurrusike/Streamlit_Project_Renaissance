@@ -188,14 +188,21 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
     all_workday_customer_names = profitability_summary_file.Customer.unique()
 
     # Site Names for Selection in Select Box
-    site_list = list(profitability_summary_file.Site.unique())
+    country_region = list(profitability_summary_file.Region.unique())
+
+
+
+
 
     #  Details Tab ###############################
 
     with (DetailsTab):
-        title_holder, cost_centres_selection = st.columns((1, 3))
+        title_holder, country_region_selection, cost_centres_selection = st.columns((1,1, 3))
 
         title_holder.subheader("Project Renaissance", divider="blue")
+        selected_region = country_region_selection.multiselect('Region :', country_region,country_region[0])
+        selected_region_profitability = profitability_summary_file[profitability_summary_file["Region"].isin(selected_region)]
+        site_list = list(selected_region_profitability.Site.unique())
         selected_site = cost_centres_selection.multiselect("Site :", site_list, site_list[0])
         # countries = ["Australia", "New Zealand"]
         # country_selected = country_label.selectbox("Country", countries, index=0, key=189)
@@ -971,7 +978,8 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
 
             startDate = start_date_range.date_input("Start Date", default_startDate, format="YYYY-MM-DD", disabled=True)
             endDate = end_date_range.date_input("End Date", default_endDate, format="YYYY-MM-DD", disabled=True)
-            countries = ["Australia", "New Zealand"]
+            # countries = ["Australia", "New Zealand"]
+            countries = invoice_rates["Country"].unique()
             country_selected = country_label.selectbox("Country", countries, index=0)
 
             refreshButton.text("")
@@ -1001,14 +1009,14 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
                 with select_Option1:
                     sel1, sel2, sel4b_service, sel3 = st.columns((3, 3, 2, 1))
 
-                    selected_cost_centre_sel1 = sel1.selectbox("Cost Centre :", cost_centres, index=0, key=544)
+                    selected_cost_centre_sel1 = sel1.selectbox("Cost Centre :", cost_centres, index=0, key=1012)
                     selected_workday_customers = invoice_rates[
                         invoice_rates.Cost_Center == selected_cost_centre_sel1].sort_values(
                         by="WorkdayCustomer_Name").WorkdayCustomer_Name.unique()
                     select_CC_data = invoice_rates[invoice_rates.Cost_Center == selected_cost_centre_sel1]
 
                     display_rate = sel4b_service.selectbox("Avg Rate | UnitPrice : ", ["Avg Rate", "UnitPrice"],
-                                                           index=0, key=1012)
+                                                           index=0, key=1019)
 
                     with sel2:
                         if selected_cost_centre_sel1:
