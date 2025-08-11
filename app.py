@@ -200,10 +200,10 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
         title_holder, country_region_selection, cost_centres_selection = st.columns((1,1, 3))
 
         title_holder.subheader("Project Renaissance", divider="blue")
-        selected_region = country_region_selection.multiselect('Region :', country_region,country_region[0])
+        selected_region = country_region_selection.multiselect('Region :', country_region,country_region[0], key=203)
         selected_region_profitability = profitability_summary_file[profitability_summary_file["Region"].isin(selected_region)]
         site_list = list(selected_region_profitability.Site.unique())
-        selected_site = cost_centres_selection.multiselect("Site :", site_list, site_list[0])
+        selected_site = cost_centres_selection.multiselect("Site :", site_list, site_list[0], key = 206)
         # countries = ["Australia", "New Zealand"]
         # country_selected = country_label.selectbox("Country", countries, index=0, key=189)
 
@@ -766,7 +766,7 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
 
                 display_data = treemap_data
                 size = len(display_data)
-                customer_view_size = s2.number_input("Filter Bottom Outlier Customers", value=size)
+                customer_view_size = s2.number_input("Filter Bottom Outlier Customers", value=size , key= 769)
                 display_data = display_data.query(f"Rank > {size - customer_view_size} ")
                 display_data_pie = display_data
                 rank_display_data = display_data
@@ -884,7 +884,7 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
                 display_network_data = treemap_network_data
                 size = len(display_network_data)
 
-                network_customer_view_size = s2.number_input("Filter Bottom Outlier Customers", value=size)
+                network_customer_view_size = s2.number_input("Filter Bottom Outlier Customers", value=size, key=887)
                 display_network_data = display_network_data.query(f"Rank > {size - network_customer_view_size} ")
 
                 display_network_data["RSB"] = (display_network_data['Storage Revenue, $'] + display_network_data[
@@ -1779,7 +1779,7 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
 
         _, weeks_input, _ = st.columns((4, 1, 4))
 
-        weeks_ago = weeks_input.number_input(f"Last 4 wks ending {endDate} ", value=4)
+        weeks_ago = weeks_input.number_input(f"Last 4 wks ending {endDate} ", value=4, key=1782)
 
         changed_weeks_ago_date = date_three_weeks_ago(endDate, number_of_weeks=weeks_ago)
 
