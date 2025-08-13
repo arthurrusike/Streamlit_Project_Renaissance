@@ -200,10 +200,11 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
         title_holder, country_region_selection, cost_centres_selection = st.columns((1,1, 3))
 
         title_holder.subheader("Project Renaissance", divider="blue")
+        # selected_cost_centre = st.selectbox("Select Cost Centre :", cost_centres, index=0, )
         selected_region = country_region_selection.multiselect('Region :', country_region,country_region[0], key=203)
         selected_region_profitability = profitability_summary_file[profitability_summary_file["Region"].isin(selected_region)]
         site_list = list(selected_region_profitability.Site.unique())
-        selected_site = cost_centres_selection.multiselect("Site :", site_list, site_list[0], key = 206)
+        selected_site = cost_centres_selection.multiselect("Site :", site_list, site_list, key = 206)
         # countries = ["Australia", "New Zealand"]
         # country_selected = country_label.selectbox("Country", countries, index=0, key=189)
 
