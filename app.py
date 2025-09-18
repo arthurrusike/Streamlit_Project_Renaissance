@@ -1249,7 +1249,7 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
 
             with(invoice_rates_by_service):
 
-                select_Option1_service, select_Option2_service = st.columns((1.5, 1))
+                select_Option1_service, select_Option2_service = st.columns((1.5, 0.5))
 
                 with select_Option1_service:
                     sel1_service, sel2_service, sel3_service, sel4b_service = st.columns((2, 2, 2, 1))
@@ -1383,7 +1383,7 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
 
                 with select_Option2_service:
 
-                    st.subheader("2024 Customers Service Rates Comparison", divider='rainbow')
+                    st.subheader("2025 Service Rates Comparison", divider='rainbow')
 
                     def1_service, wt1_service, def2_service = st.columns((1, 3, 1))
 
@@ -1421,25 +1421,36 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
         #
         # box_whisker_invoice_rates = invoice_rates[invoice_rates.InvoiceDate > str(default_3_weeks_ago_startDate)]
 
-        v1, v2, plot_UOM = st.columns((1, 1, 3))
-
-        site_list_rates = customer_rate_cards.Site.unique()
-        plots_unit_of_measure = sorted(customer_rate_cards.Prop.unique())
+        v1, v2, v3,  plot_UOM = st.columns((0.5, 1,0.15, 1))
 
 
-        selected_site_rate_cards = v1.selectbox("Site Selection for Rate Cards :", site_list_rates, index=0)
-        display_box_customers = v2.selectbox("Select Customers to View :", ["All", "Outliers Only"], index=0)
+        region_list_rates = sorted(customer_rate_cards.Region.unique())
+        region_list_rates = np.insert(region_list_rates, 0, "All")
+        selected_region_filter = v1.selectbox('Select Region', region_list_rates,index = 1)
+        selected_region_rate_cards = customer_rate_cards[customer_rate_cards["Region"]  == selected_region_filter]
+
+        site_list_rates =  sorted(selected_region_rate_cards.Site.unique())
+        selected_site_rate_cards = v2.multiselect("Select Site :", site_list_rates,site_list_rates, key = 1433)
+
+        # site_list_rates = region_list_rates.Site.unique()
+        plots_unit_of_measure = sorted(selected_region_rate_cards.Prop.unique())
+
+        display_box_customers = v3.selectbox("Select View :", ["All", "Outliers Only"], index=0)
         selected_Plot_UOM = plot_UOM.multiselect("Unit of Measure : ", plots_unit_of_measure,
                                                  plots_unit_of_measure, key=1426)
 
-        customer_rate_cards = customer_rate_cards[customer_rate_cards.Prop.isin(selected_Plot_UOM)]
+        selected_region_rate_cards = (customer_rate_cards
+                                      if selected_region_filter == 'All'
+                                      else selected_region_rate_cards[selected_region_rate_cards.Site.isin(selected_site_rate_cards)])
+
+        selected_region_rate_cards = (customer_rate_cards
+                                      if selected_region_filter == 'All'
+                                      else selected_region_rate_cards[selected_region_rate_cards.Prop.isin(selected_Plot_UOM)])
 
         st.text("")
         st.text("")
 
         p1_Storage, p2_Handling, = st.columns((1, 1))
-
-        customer_rate_cards = customer_rate_cards[customer_rate_cards.Site == selected_site_rate_cards]
 
         # customer_rate_cards = pd.pivot_table(customer_rate_cards,
         #                                      values=["Quantity","LineAmount"],
@@ -1452,10 +1463,14 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
         # customer_rate_cards.Name =  customer_rate_cards.Name.apply(extract_short_name)
         # customer_rate_cards["Customer"] = customer_rate_cards["Name"]
 
+        df_pStorage = selected_region_rate_cards[selected_region_rate_cards.Description == "Storage"]
+        print(df_pStorage)
+
+
         try:
 
             with p1_Storage:
-                df_pStorage = customer_rate_cards[customer_rate_cards.Description == "Storage"]
+                df_pStorage = selected_region_rate_cards[selected_region_rate_cards.Description == "Storage"]
                 df_pStorage_customers_count = len(df_pStorage)
                 customer_names = df_pStorage.Customer
 
@@ -1511,7 +1526,7 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
 
                             fig.update_layout(
                                 title=dict(
-                                    text=f'{selected_site_rate_cards} : Customers ({df_pStorage_customers_count}) : Storage Rates'),
+                                    text=f'{selected_region_filter} : Customers ({df_pStorage_customers_count}) : Storage Rates'),
                                 margin=dict(l=0, r=10, b=10, t=30),
                             )
                     else:
@@ -1528,7 +1543,7 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
 
                         fig.update_layout(
                             title=dict(
-                                text=f'{selected_site_rate_cards} : Customers ({df_pStorage_customers_count}) : Storage Rates'),
+                                text=f'{selected_region_filter} : Customers ({df_pStorage_customers_count}) : Storage Rates'),
                             margin=dict(l=0, r=10, b=10, t=30),
                         )
 
@@ -1536,7 +1551,7 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
 
             # Handling Box plot ####################################################################
             with p2_Handling:
-                df_pHandling = customer_rate_cards[customer_rate_cards.Description == "Pallet Handling"]
+                df_pHandling = selected_region_rate_cards[selected_region_rate_cards.Description == "Pallet Handling"]
                 df_pHandling_customers_count = len(df_pHandling)
                 handling_customer_names = df_pHandling.Customer
 
@@ -1587,7 +1602,7 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
 
                             fig.update_layout(
                                 title=dict(
-                                    text=f'{selected_site_rate_cards} : Customers ({df_pHandling_customers_count}): Handling Rates'),
+                                    text=f'{selected_region_filter} : Customers ({df_pHandling_customers_count}): Handling Rates'),
                                 margin=dict(l=0, r=10, b=10, t=30)
                             )
                     else:
@@ -1606,7 +1621,7 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
 
                         fig.update_layout(
                             title=dict(
-                                text=f'{selected_site_rate_cards} : Customers ({df_pHandling_customers_count}): Handling Rates'),
+                                text=f'{selected_region_filter} : Customers ({df_pHandling_customers_count}): Handling Rates'),
                             margin=dict(l=0, r=10, b=10, t=30)
                         )
 
@@ -1621,7 +1636,7 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
             # Shrink Wrap Box plot ######################################################
 
             with p3_Wrapping:
-                df_pWrapping = customer_rate_cards[customer_rate_cards.Description == "Shrink Wrap"]
+                df_pWrapping = selected_region_rate_cards[selected_region_rate_cards.Description == "Shrink Wrap"]
                 df_pWrapping_customers_count = len(df_pWrapping)
                 wrapping_customer_names = df_pWrapping.Customer
 
@@ -1672,7 +1687,7 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
 
                             fig.update_layout(
                                 title=dict(
-                                    text=f'{selected_site_rate_cards} : Customers ({df_pWrapping_customers_count}) : Shrink Wrapping Rates'),
+                                    text=f'{selected_region_filter} : Customers ({df_pWrapping_customers_count}) : Shrink Wrapping Rates'),
                                 margin=dict(l=0, r=10, b=10, t=20))
                     else:
                         seperator = negative_separator if seperator == positive_separator else positive_separator
@@ -1688,14 +1703,14 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
 
                         fig.update_layout(
                             title=dict(
-                                text=f'{selected_site_rate_cards} : Customers ({df_pWrapping_customers_count}) : Shrink Wrapping Rates'),
+                                text=f'{selected_region_filter} : Customers ({df_pWrapping_customers_count}) : Shrink Wrapping Rates'),
                             margin=dict(l=0, r=10, b=10, t=20))
 
                 p3_Wrapping.plotly_chart(fig)
 
             with p4_Cartons:
                 ############################ Shrink Wrap Box plot ######################################################
-                df_pCarton = customer_rate_cards[customer_rate_cards.Description == "Carton Picking"]
+                df_pCarton = selected_region_rate_cards[selected_region_rate_cards.Description == "Carton Picking"]
                 df_pCarton_customers_count = len(df_pCarton)
                 picking_customer_names = df_pCarton.Customer
 
@@ -1746,7 +1761,7 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
 
                             fig.update_layout(
                                 title=dict(
-                                    text=f'{selected_site_rate_cards} : Customers ({df_pCarton_customers_count}) : Carton Picking Rates'),
+                                    text=f'{selected_region_filter} : Customers ({df_pCarton_customers_count}) : Carton Picking Rates'),
                                 margin=dict(l=0, r=10, b=10, t=20))
                     else:
                         seperator = negative_separator if seperator == positive_separator else positive_separator
@@ -1763,7 +1778,7 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
 
                         fig.update_layout(
                             title=dict(
-                                text=f'{selected_site_rate_cards} : Customers ({df_pCarton_customers_count}) : Carton Picking Rates'),
+                                text=f'{selected_region_filter} : Customers ({df_pCarton_customers_count}) : Carton Picking Rates'),
                             margin=dict(l=0, r=10, b=10, t=20))
 
                 p4_Cartons.plotly_chart(fig)
@@ -1773,124 +1788,144 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
                         f"to display info ")
 
         # st.subheader("", divider="rainbow")
-        st.text("")
-        st.text("")
-
-        st.subheader("Other Customer Rates Analysis Invoiced at Site ", divider="rainbow")
-
-        _, weeks_input, _ = st.columns((4, 1, 4))
-
-        weeks_ago = weeks_input.number_input(f"Last 4 wks ending {endDate} ", value=4, key=1782)
-
-        changed_weeks_ago_date = date_three_weeks_ago(endDate, number_of_weeks=weeks_ago)
-
-        default_3_weeks_ago_startDate = datetime.date(changed_weeks_ago_date.year, changed_weeks_ago_date.month,
-                                                      changed_weeks_ago_date.day)
-
-        invoice_rates.Cost_Center = invoice_rates.Cost_Center.apply(extract_site)
-
-        site_list_rates = invoice_rates.Cost_Center.unique()
-
-        box_whisker_invoice_rates = invoice_rates[invoice_rates.InvoiceDate > str(default_3_weeks_ago_startDate)]
-
-        v1, service_view, v2 = st.columns(3)
-
-        last_cost_center = len(site_list_rates) - 1
-
-        selected_site_rate_cards = v1.selectbox("Site Selection for Rate Cards :", site_list_rates,
-                                                index=last_cost_center, key=1760)
 
         st.text("")
         st.text("")
 
-        box_whisker_invoice_rates = box_whisker_invoice_rates[
-            box_whisker_invoice_rates.Cost_Center == selected_site_rate_cards]
+        with st.expander(f"Extended View", expanded=False):
 
-        all_workday_Services = box_whisker_invoice_rates.Revenue_Category.unique()
+            st.subheader("Other Customer Rates Analysis Invoiced at Site ", divider="rainbow")
 
-        last_service = len(all_workday_Services) - 1
+            _, weeks_input, _ = st.columns((4, 1, 4))
 
-        selected_service_view = service_view.selectbox("Site Selection for Rate Cards :", all_workday_Services,
-                                                       index=last_service,
-                                                       key=1778)
+            weeks_ago = weeks_input.number_input(f"Last 4 wks ending {endDate} ", value=4, key=1782)
 
-        box_whisker_invoice_rates = box_whisker_invoice_rates[
-            box_whisker_invoice_rates.Revenue_Category == selected_service_view]
+            changed_weeks_ago_date = date_three_weeks_ago(endDate, number_of_weeks=weeks_ago)
 
-        box_whisker_invoice_rates = pd.pivot_table(box_whisker_invoice_rates,
-                                                   values=["Quantity", "LineAmount"],
-                                                   index=["Revenue_Category", "UnitOfMeasure", "WorkdayCustomer_Name",
-                                                          "UnitPrice"],
-                                                   aggfunc="sum").reset_index()
+            default_3_weeks_ago_startDate = datetime.date(changed_weeks_ago_date.year, changed_weeks_ago_date.month,
+                                                          changed_weeks_ago_date.day)
 
-        # box_whisker_invoice_rates[
-        #     "Avg Rate"] = box_whisker_invoice_rates.LineAmount / box_whisker_invoice_rates.Quantity
+            invoice_rates.Cost_Center = invoice_rates.Cost_Center.apply(extract_site)
 
-        box_whisker_invoice_rates[
-            "Avg Rate"] = box_whisker_invoice_rates.UnitPrice
+            site_list_rates = invoice_rates.Cost_Center.unique()
 
-        p5_Others, _, p5_Table, = st.columns((2, 0.5, 2))
+            box_whisker_invoice_rates = invoice_rates[invoice_rates.InvoiceDate > str(default_3_weeks_ago_startDate)]
 
-        with p5_Others:
+            v1, service_view, v2 = st.columns(3)
 
-            try:
+            last_cost_center = len(site_list_rates) - 1
 
-                display_box_customers = st.selectbox("Select Customers to View :", ["All", "Outliers Only"], index=0,
-                                                     key=1761)
-                st.text("")
-                st.text("")
+            selected_site_rate_cards = v1.selectbox("Site Selection for Rate Cards :", site_list_rates,
+                                                    index=0, key=1816)
 
-                ############################ Shrink Wrap Box plot ######################################################
+            st.text("")
+            st.text("")
 
-                df_pServiceView = box_whisker_invoice_rates[
-                    box_whisker_invoice_rates.Revenue_Category == selected_service_view]
+            box_whisker_invoice_rates = box_whisker_invoice_rates[
+                box_whisker_invoice_rates.Cost_Center == selected_site_rate_cards]
 
-                all_workday_Services = df_pServiceView.Revenue_Category.unique()
+            all_workday_Services = box_whisker_invoice_rates.Revenue_Category.unique()
 
-                all_unit_of_measures = df_pServiceView.UnitOfMeasure.unique()
+            last_service = len(all_workday_Services) - 1
 
-                select_UOM = v2.multiselect("Unit of Measure : ", all_unit_of_measures,
-                                            all_unit_of_measures, key=1906)
+            selected_service_view = service_view.selectbox("Site Selection for Rate Cards :", all_workday_Services,
+                                                           index=last_service,
+                                                           key=1778)
 
-                df_pServiceView = df_pServiceView[df_pServiceView.UnitOfMeasure.isin(select_UOM)]
+            box_whisker_invoice_rates = box_whisker_invoice_rates[
+                box_whisker_invoice_rates.Revenue_Category == selected_service_view]
 
-                df_pCarton_customers_count = len(df_pServiceView)
-                picking_customer_names = df_pServiceView.WorkdayCustomer_Name
+            box_whisker_invoice_rates = pd.pivot_table(box_whisker_invoice_rates,
+                                                       values=["Quantity", "LineAmount"],
+                                                       index=["Revenue_Category", "UnitOfMeasure", "WorkdayCustomer_Name",
+                                                              "UnitPrice"],
+                                                       aggfunc="sum").reset_index()
 
-                q3_pCarton = np.percentile(df_pServiceView["Avg Rate"].values, 75)
-                q1_pCarton = np.percentile(df_pServiceView["Avg Rate"].values, 25)
+            # box_whisker_invoice_rates[
+            #     "Avg Rate"] = box_whisker_invoice_rates.LineAmount / box_whisker_invoice_rates.Quantity
 
-                # Add points with Labels
-                y = df_pServiceView["Avg Rate"].values
-                x = np.random.normal(1, 0.250, size=(len(y)))
+            box_whisker_invoice_rates[
+                "Avg Rate"] = box_whisker_invoice_rates.UnitPrice
 
-                positive_separator = 0.1
-                negative_separator = -0.2
-                y_axes_offset = 0
-                seperator = 0
+            p5_Others, _, p5_Table, = st.columns((2, 0.5, 2))
 
-                # Create Box Plot Figure:
-                box_x_value = np.random.normal(1, 0.250, size=len(y))
+            with p5_Others:
 
-                # Create a Boxplot
-                fig = go.Figure()
+                try:
 
-                fig.add_trace(go.Box(
-                    y=y,
-                    boxpoints='all',
-                    jitter=0.8,
-                    pointpos=0,
-                    name=f"{selected_service_view} Rates",
-                    line={"color": '#4D93D9'},
-                    marker={"size": 5, "color": 'red'},
-                ))
+                    display_box_customers = st.selectbox("Select Customers to View :", ["All", "Outliers Only"], index=0,
+                                                         key=1761)
+                    st.text("")
+                    st.text("")
 
-                # Add annotations for each data point
-                for i, (val, customer) in enumerate(zip(y, picking_customer_names)):
-                    shortName = [customer.title()[:9] + '...' if len(customer.title()) > 10 else customer.title() for
-                                 cus in customer]
-                    if display_box_customers == "Outliers Only":
-                        if float(y[i]) < q1_pCarton or float(y[i]) > q3_pCarton:
+                    ############################ Shrink Wrap Box plot ######################################################
+
+                    df_pServiceView = box_whisker_invoice_rates[
+                        box_whisker_invoice_rates.Revenue_Category == selected_service_view]
+
+                    all_workday_Services = df_pServiceView.Revenue_Category.unique()
+
+                    all_unit_of_measures = df_pServiceView.UnitOfMeasure.unique()
+
+                    select_UOM = v2.multiselect("Unit of Measure : ", all_unit_of_measures,
+                                                all_unit_of_measures, key=1906)
+
+                    df_pServiceView = df_pServiceView[df_pServiceView.UnitOfMeasure.isin(select_UOM)]
+
+                    df_pCarton_customers_count = len(df_pServiceView)
+                    picking_customer_names = df_pServiceView.WorkdayCustomer_Name
+
+                    q3_pCarton = np.percentile(df_pServiceView["Avg Rate"].values, 75)
+                    q1_pCarton = np.percentile(df_pServiceView["Avg Rate"].values, 25)
+
+                    # Add points with Labels
+                    y = df_pServiceView["Avg Rate"].values
+                    x = np.random.normal(1, 0.250, size=(len(y)))
+
+                    positive_separator = 0.1
+                    negative_separator = -0.2
+                    y_axes_offset = 0
+                    seperator = 0
+
+                    # Create Box Plot Figure:
+                    box_x_value = np.random.normal(1, 0.250, size=len(y))
+
+                    # Create a Boxplot
+                    fig = go.Figure()
+
+                    fig.add_trace(go.Box(
+                        y=y,
+                        boxpoints='all',
+                        jitter=0.8,
+                        pointpos=0,
+                        name=f"{selected_service_view} Rates",
+                        line={"color": '#4D93D9'},
+                        marker={"size": 5, "color": 'red'},
+                    ))
+
+                    # Add annotations for each data point
+                    for i, (val, customer) in enumerate(zip(y, picking_customer_names)):
+                        shortName = [customer.title()[:9] + '...' if len(customer.title()) > 10 else customer.title() for
+                                     cus in customer]
+                        if display_box_customers == "Outliers Only":
+                            if float(y[i]) < q1_pCarton or float(y[i]) > q3_pCarton:
+                                seperator = negative_separator if seperator == positive_separator else positive_separator
+                                fig.add_annotation(
+                                    x=float(x[i]),
+                                    y=float(y[i]),
+                                    showarrow=False,
+                                    xshift=float(y[i]) + seperator,  # Adjust this value to position the labels horizontally
+                                    hovertext=f'{customer.title()}, Rate:  {val}',
+                                    text=f"{shortName[i]} + 5 ",
+                                    font={"size": 13,
+                                          "color": 'black'}
+                                )
+
+                                fig.update_layout(
+                                    title=dict(
+                                        text=f'{selected_site_rate_cards} : Customers ({df_pCarton_customers_count}) : {selected_service_view} Rates'),
+                                    margin=dict(l=0, r=10, b=10, t=20))
+                        else:
                             seperator = negative_separator if seperator == positive_separator else positive_separator
                             fig.add_annotation(
                                 x=float(x[i]),
@@ -1898,7 +1933,7 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
                                 showarrow=False,
                                 xshift=float(y[i]) + seperator,  # Adjust this value to position the labels horizontally
                                 hovertext=f'{customer.title()}, Rate:  {val}',
-                                text=f"{shortName[i]} + 5 ",
+                                text=f"{shortName[i]}",
                                 font={"size": 13,
                                       "color": 'black'}
                             )
@@ -1907,75 +1942,58 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
                                 title=dict(
                                     text=f'{selected_site_rate_cards} : Customers ({df_pCarton_customers_count}) : {selected_service_view} Rates'),
                                 margin=dict(l=0, r=10, b=10, t=20))
+
+                    p5_Others.plotly_chart(fig)
+
+                except Exception as e:
+                    st.markdown('#### No Data ')
+
+            with p5_Table:
+
+                try:
+
+                    selected_customer = df_pServiceView
+
+                    display_rate = "UnitPrice"
+                    if display_rate == "UnitPrice":
+                        selected_customer_pivot = pd.pivot_table(selected_customer,
+                                                                 values=["Quantity", "LineAmount"],
+                                                                 index=["WorkdayCustomer_Name", "UnitOfMeasure",
+                                                                        "UnitPrice"],
+                                                                 aggfunc="sum").reset_index()
                     else:
-                        seperator = negative_separator if seperator == positive_separator else positive_separator
-                        fig.add_annotation(
-                            x=float(x[i]),
-                            y=float(y[i]),
-                            showarrow=False,
-                            xshift=float(y[i]) + seperator,  # Adjust this value to position the labels horizontally
-                            hovertext=f'{customer.title()}, Rate:  {val}',
-                            text=f"{shortName[i]}",
-                            font={"size": 13,
-                                  "color": 'black'}
-                        )
 
-                        fig.update_layout(
-                            title=dict(
-                                text=f'{selected_site_rate_cards} : Customers ({df_pCarton_customers_count}) : {selected_service_view} Rates'),
-                            margin=dict(l=0, r=10, b=10, t=20))
+                        selected_customer_pivot = pd.pivot_table(selected_customer,
+                                                                 values=["Quantity", "LineAmount"],
+                                                                 index=["WorkdayCustomer_Name", "UnitOfMeasure", ],
+                                                                 aggfunc="sum").reset_index()
 
-                p5_Others.plotly_chart(fig)
+                        selected_customer_pivot[
+                            "Avg Rate"] = selected_customer_pivot.LineAmount / selected_customer_pivot.Quantity
 
-            except Exception as e:
-                st.markdown('#### No Data ')
+                    selected_customer_pivot.WorkdayCustomer_Name = selected_customer_pivot.WorkdayCustomer_Name.apply(
+                        proper_case)
 
-        with p5_Table:
+                    selected_customer_pivot = selected_customer_pivot.sort_values(by="WorkdayCustomer_Name",
+                                                                                  ascending=True)
 
-            try:
+                    selected_customer_pivot_table = selected_customer_pivot.style.format({
+                        "LineAmount": "${0:,.2f}",
+                        "Quantity": "{0:,.0f}",
+                        "UnitPrice": "${0:,.2f}",
+                        "Avg Rate": "${0:,.2f}",
+                        "estimate_turn": "{0:,.1f}"
+                    })
 
-                selected_customer = df_pServiceView
+                    selected_customer_pivot_table = selected_customer_pivot_table.map(highlight_negative_values)
 
-                display_rate = "UnitPrice"
-                if display_rate == "UnitPrice":
-                    selected_customer_pivot = pd.pivot_table(selected_customer,
-                                                             values=["Quantity", "LineAmount"],
-                                                             index=["WorkdayCustomer_Name", "UnitOfMeasure",
-                                                                    "UnitPrice"],
-                                                             aggfunc="sum").reset_index()
-                else:
+                    selected_customer_pivot_table = style_dataframe(selected_customer_pivot_table)
+                    selected_customer_pivot_table = selected_customer_pivot_table.hide(axis="index")
 
-                    selected_customer_pivot = pd.pivot_table(selected_customer,
-                                                             values=["Quantity", "LineAmount"],
-                                                             index=["WorkdayCustomer_Name", "UnitOfMeasure", ],
-                                                             aggfunc="sum").reset_index()
-
-                    selected_customer_pivot[
-                        "Avg Rate"] = selected_customer_pivot.LineAmount / selected_customer_pivot.Quantity
-
-                selected_customer_pivot.WorkdayCustomer_Name = selected_customer_pivot.WorkdayCustomer_Name.apply(
-                    proper_case)
-
-                selected_customer_pivot = selected_customer_pivot.sort_values(by="WorkdayCustomer_Name",
-                                                                              ascending=True)
-
-                selected_customer_pivot_table = selected_customer_pivot.style.format({
-                    "LineAmount": "${0:,.2f}",
-                    "Quantity": "{0:,.0f}",
-                    "UnitPrice": "${0:,.2f}",
-                    "Avg Rate": "${0:,.2f}",
-                    "estimate_turn": "{0:,.1f}"
-                })
-
-                selected_customer_pivot_table = selected_customer_pivot_table.map(highlight_negative_values)
-
-                selected_customer_pivot_table = style_dataframe(selected_customer_pivot_table)
-                selected_customer_pivot_table = selected_customer_pivot_table.hide(axis="index")
-
-                st.write(selected_customer_pivot_table.to_html(), unsafe_allow_html=True)
-            except Exception as e:
-                st.markdown('#### No Data ')
-    st.subheader("", divider="rainbow")
+                    st.write(selected_customer_pivot_table.to_html(), unsafe_allow_html=True)
+                except Exception as e:
+                    st.markdown('#### No Data ')
+        st.subheader("", divider="rainbow")
 
     # with st.expander("Select Customer to Benchmark", expanded=False):
     #     customer_list = rank_display_data.Name.unique()
