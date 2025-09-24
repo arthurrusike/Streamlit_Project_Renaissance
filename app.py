@@ -958,7 +958,8 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
                         key=877,
                     )
 
-                st.write(display_network_data.to_html(), unsafe_allow_html=True, use_container_width=True)
+                st.write(display_network_data.to_html(), unsafe_allow_html=True, )
+                # st.write(display_network_data.to_html(), unsafe_allow_html=True, use_container_width=True)
 
                 st.text("")
                 st.text("")
