@@ -515,6 +515,7 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
         #     kpi4.metric(label=f"Volume Guarantee", value=f"{volume_guarantee_2024:,.0f}", delta=f"{delta} ")
         #     st.text("")
         #     st.text("")
+
         #
         fin1, fin2 = st.columns((2.5, 3))
 
