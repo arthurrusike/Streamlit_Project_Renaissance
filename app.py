@@ -23,6 +23,7 @@ st.set_page_config(page_title="Project Renaissance Analysis - AU", page_icon="ğŸ
                    initial_sidebar_state="expanded")
 
 
+
 def extract_cc(cost_centre):
     return cost_centre[:9]
 
