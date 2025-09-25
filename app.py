@@ -1,6 +1,5 @@
 import io
 import random
-# from idlelib.textview import ViewFrame
 from io import BytesIO
 import datetime
 from datetime import timedelta
