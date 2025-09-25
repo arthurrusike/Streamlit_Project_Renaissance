@@ -87,7 +87,7 @@ def sub_category_classification(dtframe):
 
 @st.cache_data
 def load_profitbility_Summary_model(uploaded_file):
-    customer_profitability_summary = pd.read_excel(uploaded_file, sheet_name="ChartData", header=5, usecols="B:BN")
+    customer_profitability_summary = pd.read_excel(uploaded_file, sheet_name="ChartData", header=5, usecols="B:BR")
     customer_profitability_summary = customer_profitability_summary[customer_profitability_summary[" Revenue"] > 0]
     return customer_profitability_summary
 
@@ -117,3 +117,46 @@ def run_sql_query(startDate, endDate):
 
 
 
+def style_commodity_customers(df):
+    return (
+        df.set_table_styles(
+
+            [
+                {
+                    'selector': 'th',
+                    'props': [
+                        ('background-color', '#305496'),
+                        ('width', 'auto'),
+                        ('color', 'white'),
+                        ('font-family', 'sans-serif, Arial'),
+                        ('font-size', '12px'),
+                        ('text-align', 'center')
+                    ]
+                },
+                {
+                    'selector': ' th',
+                    'props': [
+                        ('border', '2px solid white')
+                    ]
+                },
+                {
+                    'selector': ' tr:hover',
+                    'props': [
+                        ('border', '1px solid #4CAF50'),
+                        ('background-color', 'wheat'),
+
+                    ]
+                },
+                {
+                    'selector': ' tr',
+                    'props': [
+                        ('text-align', 'left'),
+                        ('font-size', '12px'),
+                        ('font-family', 'sans-serif, Arial'),
+
+                    ]
+                }
+            ]
+        )
+
+    )
