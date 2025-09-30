@@ -23,7 +23,6 @@ st.set_page_config(page_title="Project Renaissance Analysis - AU", page_icon="ðŸ
                    initial_sidebar_state="expanded")
 
 
-
 def extract_cc(cost_centre):
     return cost_centre[:9]
 
@@ -220,7 +219,6 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
             profitability_2023.Site.isin(selected_site)]
         select_Site_data_2023_pallets = customer_pallets[customer_pallets.Site.isin(selected_site)]
 
-
         fin1, fin2 = st.columns((2.5, 3))
 
         key_metrics_data = profitability_summary_file[profitability_summary_file[" Revenue"] > 1]
@@ -300,8 +298,6 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
                 fin1.write(key_metrics_data_pivot_Hume.to_html(), unsafe_allow_html=True, )
 
         key_metrics_data_Hume_KPI = key_metrics_data.groupby("Site").sum()
-
-        # key_metrics_data["Capacity"] =   key_metrics_data["Pal Cap"] / len(key_metrics_data[key_metrics_data == key_metrics_data["CC"] ])
 
         test = key_metrics_data[["CC", "Pal Cap"]].groupby("CC").mean()
         key_metrics_data = key_metrics_data.groupby("CC").sum()
@@ -768,6 +764,10 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
                 display_data["Turn"] = ((display_data["TTP p.w."] / 2) * 52) / display_data["Pallet"]
                 display_data["DL ratio"] = commodity_type_DL_Handling / commodity_type_service_Revenue
                 display_data["LTR - %"] = commodity_type_ttl_Labour / display_data[" Revenue"]
+                display_data['RSB Rev per OHP'] = (display_data['Storage Revenue, $'] + display_data[
+                    'Blast Freezing Revenue, $']) / (display_data['Pallet'] * 52)
+                display_data['Service Rev per TPP'] =( display_data[" Revenue"]-  (display_data['Storage Revenue, $'] + display_data[
+                    'Blast Freezing Revenue, $']) ) / (display_data['TTP p.w.'] * 52)
 
                 treemap_graph_data = display_data
 
@@ -839,18 +839,18 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
                 displayCustomers_map = {}
 
                 for commodityType in customer_names_display["Commodity Type"].unique():
-                    displayCustomers = sorted(customer_names_display[customer_names_display['Commodity Type'] == commodityType]["Name"].unique())
+                    displayCustomers = sorted(
+                        customer_names_display[customer_names_display['Commodity Type'] == commodityType][
+                            "Name"].unique())
 
                     displayCustomers_map[commodityType] = ' | '.join(displayCustomers)
 
-                displayCustomers_result = pd.DataFrame(list(displayCustomers_map.items()), columns=['Category', 'Customer Names'])
+                displayCustomers_result = pd.DataFrame(list(displayCustomers_map.items()),
+                                                       columns=['Category', 'Customer Names'])
                 displayCustomers_result = displayCustomers_result.style.hide(axis="index")
                 displayCustomers_result = style_commodity_customers(displayCustomers_result)
 
                 st.write(displayCustomers_result.to_html(), unsafe_allow_html=True)
-
-
-
 
     with st.expander(f"Customer Invoicing Comparison - Raw SWMS Invoicing Data for 12 Months", expanded=True):
 
@@ -1295,7 +1295,6 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
     st.subheader("Review of Customer Rates at Site", divider="rainbow")
 
     #     ###############################  Box Plots Over and under Indexed Customers  ###############################
-
 
     v1, v2, v3, plot_UOM = st.columns((0.5, 1, 0.15, 1))
 
