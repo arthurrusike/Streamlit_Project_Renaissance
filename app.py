@@ -229,10 +229,11 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
 
         key_metrics_data_pivot = pd.pivot_table(key_metrics_data, index=["Cost Center", "Name", "Site"],
                                                 values=[" Revenue", 'EBITDAR $', 'Rent Expense,\n$',
-                                                        'EBITDA $',
-                                                        # 'Sqm Rent'
+                                                                                 'EBITDA $'
                                                         ],
                                                 aggfunc='sum', sort=True)
+
+
 
         key_metrics_data_pivot_Hume = pd.pivot_table(key_metrics_data, index=["Site"],
                                                      values=[" Revenue", 'EBITDAR $', 'Rent Expense,\n$',
@@ -242,16 +243,22 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
                                                      aggfunc='sum', sort=True)
 
         key_metrics_data_pivot = key_metrics_data_pivot.reset_index("Name")
+        key_metrics_data_pivot = key_metrics_data_pivot[["Name"," Revenue", 'EBITDAR $', 'Rent Expense,\n$',
+                                                         'EBITDA $',]]
 
-        key_metrics_data_pivot["Ebitda - %"] = key_metrics_data_pivot['EBITDA $'] / key_metrics_data_pivot[' Revenue']
+
         key_metrics_data_pivot.insert(3, "Ebitdar - %",
                                       key_metrics_data_pivot['EBITDAR $'] / key_metrics_data_pivot[' Revenue'])
+        # key_metrics_data_pivot["Ebitda - %"] = key_metrics_data_pivot['EBITDA $'] / key_metrics_data_pivot[' Revenue']
+        key_metrics_data_pivot['EBITDA $'] =   key_metrics_data_pivot['EBITDA $']
+        key_metrics_data_pivot.insert(6,"Ebitda - %",  key_metrics_data_pivot['EBITDA $'] / key_metrics_data_pivot[' Revenue'])
+
+        key_metrics_data_pivot_Hume.insert(2, "Ebitdar - %", key_metrics_data_pivot_Hume['EBITDAR $'] / \
+                                           key_metrics_data_pivot_Hume[' Revenue'])
 
         key_metrics_data_pivot_Hume["Ebitda - %"] = key_metrics_data_pivot_Hume['EBITDA $'] / \
                                                     key_metrics_data_pivot_Hume[' Revenue']
 
-        key_metrics_data_pivot_Hume.insert(2, "Ebitdar - %", key_metrics_data_pivot_Hume['EBITDAR $'] / \
-                                           key_metrics_data_pivot_Hume[' Revenue'])
 
         key_metrics_data_pivot = key_metrics_data_pivot.style.hide(axis="index")
 
