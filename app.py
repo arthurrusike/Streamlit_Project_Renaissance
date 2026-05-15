@@ -157,7 +157,7 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
     # Read individual Excel sheet separately = Customer Volumes current year and prior year. Use for comparison.
     customer_rate_cards = load_specific_xls_sheet(customer_rates_file, "2025_Rate_Cards", 0, "A:J")
 
-    # Read individual Excel sheet separately = Customer Volumes current year and prior year. Use for comparison.
+
     dominic_report = load_specific_xls_sheet(customer_rates_file, "dominic_report", 0, "A:AM")
 
     # Read individual Excel sheet separately = Customer Volumes current year and prior year. Use for comparison.

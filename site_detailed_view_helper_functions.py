@@ -36,6 +36,8 @@ def load_invoices_model(uploaded_file):
     invoice_rates['formatted_date'] = pd.to_datetime(invoice_rates['InvoiceDate'])
     invoice_rates.formatted_date = invoice_rates.formatted_date.dt.strftime('%Y-%m-%d')
     invoice_rates.sort_values("InvoiceNumber", inplace=True)
+
+
     return invoice_rates
 
 
