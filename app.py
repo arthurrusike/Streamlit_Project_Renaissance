@@ -180,7 +180,8 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
             budget_data_2025["Rent & Storage & Blast"] + budget_data_2025["Services"])
     budget_data_2025.dropna(inplace=True)
     budget_data_2025.drop(
-        columns=["Throughput Plt", "Total Pallets", "Physical OHP", "Services", "Rent & Storage & Blast"], axis=1,
+        columns=["Throughput Plt", "Total Pallets", "Physical OHP", "Services", "Rent & Storage & Blast"],
+        # axis=1,
         inplace=True)
     budget_comparison_years = budget_data_2025.Year.unique()
 
