@@ -11,16 +11,16 @@ def style_dataframe(df):
 
             [
                 {
-                'selector': 'th',
-                'props': [
-                    ('background-color', '#305496'),
-                    ('width', 'auto'),
-                    ('color', 'white'),
-                    ('font-family', 'sans-serif, Arial'),
-                    ('font-size', '12px'),
-                    ('text-align', 'center')
-                ]
-            },
+                    'selector': 'th',
+                    'props': [
+                        ('background-color', '#305496'),
+                        ('width', 'auto'),
+                        ('color', 'white'),
+                        ('font-family', 'sans-serif, Arial'),
+                        ('font-size', '12px'),
+                        ('text-align', 'center')
+                    ]
+                },
                 {
                     'selector': ' th',
                     'props': [
@@ -103,12 +103,10 @@ def load_specific_xls_sheet(file, sheet_name, header, use_cols):
     cached_xls_sheet = pd.read_excel(file, sheet_name=sheet_name, header=header, usecols=use_cols)
     return cached_xls_sheet
 
+
 @st.cache_data
 def run_sql_query(startDate, endDate):
-
     # conn = pyodbc.connect('DSN=CalumoCoreDW; Trusted_Connection=yes; DRIVER=SQL Server;')
-
-
     # conn = pyodbc.connect('DSN=CalumoCoreDW; Trusted_Connection=yes; DRIVER=SQL Server;')
     # conn = pyodbc.connect('Driver={{SQL Server}};Server=au-cl1-dwdb\dwprod;Database= CoreDW;Trusted_Connection=yes;DSN=CalumoCoreDW;')
     conn = pyodbc.connect('Trusted_Connection=yes;DSN=CalumoCoreDW;')
@@ -117,7 +115,6 @@ def run_sql_query(startDate, endDate):
     invoice_rates = pd.read_sql_query(slqQuery, conn)
 
     return invoice_rates
-
 
 
 def style_commodity_customers(df):

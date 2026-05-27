@@ -147,43 +147,42 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
     profitability_summary_file["Site"] = profitability_summary_file["Cost Center"].apply(extract_site)
 
     # Read individual Excel sheet separately = Prior Year Customer Profitability. Use for comparison.
-    profitability_2023 = load_specific_xls_sheet(customer_rates_file, "2023_Profitability", 0, "A:AQ")
-    profitability_2023["Site"] = profitability_2023["Cost Center"].apply(extract_site)
+    # profitability_2023 = load_specific_xls_sheet(customer_rates_file, "2023_Profitability", 0, "A:AQ")
+    # profitability_2023["Site"] = profitability_2023["Cost Center"].apply(extract_site)
 
     # Read individual Excel sheet separately = Customer Volumes current year and prior year. Use for comparison.
-    customer_pallets = load_specific_xls_sheet(customer_rates_file, "customer_pallets", 0, "A:CV")
-    customer_pallets["Site"] = customer_pallets["Cost Center"].apply(extract_site)
+    # customer_pallets = load_specific_xls_sheet(customer_rates_file, "customer_pallets", 0, "A:CV")
+    # customer_pallets["Site"] = customer_pallets["Cost Center"].apply(extract_site)
 
     # Read individual Excel sheet separately = Customer Volumes current year and prior year. Use for comparison.
     customer_rate_cards = load_specific_xls_sheet(customer_rates_file, "2025_Rate_Cards", 0, "A:J")
 
-
-    dominic_report = load_specific_xls_sheet(customer_rates_file, "dominic_report", 0, "A:AM")
+    # dominic_report = load_specific_xls_sheet(customer_rates_file, "dominic_report", 0, "A:AM")
 
     # Read individual Excel sheet separately = Customer Volumes current year and prior year. Use for comparison.
-    budget_data_2025 = load_specific_xls_sheet(customer_rates_file, "2025_Budget", 0, "A:AP")
+    # budget_data_2025 = load_specific_xls_sheet(customer_rates_file, "2025_Budget", 0, "A:AP")
 
-    budget_data_2025 = budget_data_2025[["Year", "Site", "Revenue", "Ebitda", "Economic OHP", "Labour to Tot. Rev",
-                                         "Direct Labor / Hour", "DL to Svcs Rev", "Economic Utilization", "Services",
-                                         "Throughput Plt", "Total Pallets", "Physical OHP", "Rent & Storage & Blast"
-                                         ]]
-
-    budget_data_2025["Rev Per Pallet"] = budget_data_2025["Revenue"] / ((budget_data_2025["Economic OHP"] / 12) * 52)
-    budget_data_2025["Ebitda Per Pallet"] = budget_data_2025["Ebitda"] / (
-        ((budget_data_2025["Economic OHP"] / 12) * 52))
-    budget_data_2025["Turn"] = ((budget_data_2025["Throughput Plt"] / 2) / (budget_data_2025["Physical OHP"] / 12))
-
-    budget_data_2025["Rev - Storage & Blast"] = budget_data_2025["Rent & Storage & Blast"] / (
-            budget_data_2025["Rent & Storage & Blast"] + budget_data_2025["Services"])
-
-    budget_data_2025["Rev - Services"] = budget_data_2025["Services"] / (
-            budget_data_2025["Rent & Storage & Blast"] + budget_data_2025["Services"])
-    budget_data_2025.dropna(inplace=True)
-    budget_data_2025.drop(
-        columns=["Throughput Plt", "Total Pallets", "Physical OHP", "Services", "Rent & Storage & Blast"],
-        # axis=1,
-        inplace=True)
-    budget_comparison_years = budget_data_2025.Year.unique()
+    # # budget_data_2025 = budget_data_2025[["Year", "Site", "Revenue", "Ebitda", "Economic OHP", "Labour to Tot. Rev",
+    # #                                      "Direct Labor / Hour", "DL to Svcs Rev", "Economic Utilization", "Services",
+    # #                                      "Throughput Plt", "Total Pallets", "Physical OHP", "Rent & Storage & Blast"
+    # #                                      ]]
+    #
+    # budget_data_2025["Rev Per Pallet"] = budget_data_2025["Revenue"] / ((budget_data_2025["Economic OHP"] / 12) * 52)
+    # budget_data_2025["Ebitda Per Pallet"] = budget_data_2025["Ebitda"] / (
+    #     ((budget_data_2025["Economic OHP"] / 12) * 52))
+    # budget_data_2025["Turn"] = ((budget_data_2025["Throughput Plt"] / 2) / (budget_data_2025["Physical OHP"] / 12))
+    #
+    # budget_data_2025["Rev - Storage & Blast"] = budget_data_2025["Rent & Storage & Blast"] / (
+    #         budget_data_2025["Rent & Storage & Blast"] + budget_data_2025["Services"])
+    #
+    # budget_data_2025["Rev - Services"] = budget_data_2025["Services"] / (
+    #         budget_data_2025["Rent & Storage & Blast"] + budget_data_2025["Services"])
+    # budget_data_2025.dropna(inplace=True)
+    # budget_data_2025.drop(
+    #     columns=["Throughput Plt", "Total Pallets", "Physical OHP", "Services", "Rent & Storage & Blast"],
+    #     # axis=1,
+    #     inplace=True)
+    # budget_comparison_years = budget_data_2025.Year.unique()
 
     # Customer Names for Selection in Select Box
     all_workday_customer_names = profitability_summary_file.Customer.unique()
@@ -216,9 +215,9 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
 
         select_Site_data = profitability_summary_file[profitability_summary_file.Site.isin(selected_site)]
 
-        select_Site_data_2023_profitability = profitability_2023[
-            profitability_2023.Site.isin(selected_site)]
-        select_Site_data_2023_pallets = customer_pallets[customer_pallets.Site.isin(selected_site)]
+        # select_Site_data_2023_profitability = profitability_2023[
+        #     profitability_2023.Site.isin(selected_site)]
+        # select_Site_data_2023_pallets = customer_pallets[customer_pallets.Site.isin(selected_site)]
 
         fin1, fin2 = st.columns((2.5, 3))
 
@@ -230,11 +229,9 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
 
         key_metrics_data_pivot = pd.pivot_table(key_metrics_data, index=["Cost Center", "Name", "Site"],
                                                 values=[" Revenue", 'EBITDAR $', 'Rent Expense,\n$',
-                                                                                 'EBITDA $'
+                                                        'EBITDA $'
                                                         ],
                                                 aggfunc='sum', sort=True)
-
-
 
         key_metrics_data_pivot_Hume = pd.pivot_table(key_metrics_data, index=["Site"],
                                                      values=[" Revenue", 'EBITDAR $', 'Rent Expense,\n$',
@@ -244,22 +241,21 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
                                                      aggfunc='sum', sort=True)
 
         key_metrics_data_pivot = key_metrics_data_pivot.reset_index("Name")
-        key_metrics_data_pivot = key_metrics_data_pivot[["Name"," Revenue", 'EBITDAR $', 'Rent Expense,\n$',
-                                                         'EBITDA $',]]
-
+        key_metrics_data_pivot = key_metrics_data_pivot[["Name", " Revenue", 'EBITDAR $', 'Rent Expense,\n$',
+                                                         'EBITDA $', ]]
 
         key_metrics_data_pivot.insert(3, "Ebitdar - %",
                                       key_metrics_data_pivot['EBITDAR $'] / key_metrics_data_pivot[' Revenue'])
         # key_metrics_data_pivot["Ebitda - %"] = key_metrics_data_pivot['EBITDA $'] / key_metrics_data_pivot[' Revenue']
-        key_metrics_data_pivot['EBITDA $'] =   key_metrics_data_pivot['EBITDA $']
-        key_metrics_data_pivot.insert(6,"Ebitda - %",  key_metrics_data_pivot['EBITDA $'] / key_metrics_data_pivot[' Revenue'])
+        key_metrics_data_pivot['EBITDA $'] = key_metrics_data_pivot['EBITDA $']
+        key_metrics_data_pivot.insert(6, "Ebitda - %",
+                                      key_metrics_data_pivot['EBITDA $'] / key_metrics_data_pivot[' Revenue'])
 
         key_metrics_data_pivot_Hume.insert(2, "Ebitdar - %", key_metrics_data_pivot_Hume['EBITDAR $'] / \
                                            key_metrics_data_pivot_Hume[' Revenue'])
 
         key_metrics_data_pivot_Hume["Ebitda - %"] = key_metrics_data_pivot_Hume['EBITDA $'] / \
                                                     key_metrics_data_pivot_Hume[' Revenue']
-
 
         key_metrics_data_pivot = key_metrics_data_pivot.style.hide(axis="index")
 
@@ -774,8 +770,9 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
                 display_data["LTR - %"] = commodity_type_ttl_Labour / display_data[" Revenue"]
                 display_data['RSB Rev per OHP'] = (display_data['Storage Revenue, $'] + display_data[
                     'Blast Freezing Revenue, $']) / (display_data['Pallet'] * 52)
-                display_data['Service Rev per TPP'] =( display_data[" Revenue"]-  (display_data['Storage Revenue, $'] + display_data[
-                    'Blast Freezing Revenue, $']) ) / (display_data['TTP p.w.'] * 52)
+                display_data['Service Rev per TPP'] = (display_data[" Revenue"] - (
+                            display_data['Storage Revenue, $'] + display_data[
+                        'Blast Freezing Revenue, $'])) / (display_data['TTP p.w.'] * 52)
 
                 treemap_graph_data = display_data
 
