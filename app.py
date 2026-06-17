@@ -561,7 +561,7 @@ if uploaded_file and customer_rates_file and uploaded_invoicing_data:
                         "Customer != '.All Other [.All Other]'")
 
                     multi_site_customers = profitability_summary_file.sort_values(by="Name").Name.unique()
-                    default_customers = [multi_site_customers[8], multi_site_customers[27], multi_site_customers[28]]
+                    default_customers = [multi_site_customers[5], multi_site_customers[5], multi_site_customers[5]]
 
                     select_network_customers = st.multiselect("Select Customers : ", multi_site_customers,
                                                               default_customers, key=792)
